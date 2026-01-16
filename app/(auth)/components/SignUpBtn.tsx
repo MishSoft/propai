@@ -1,9 +1,32 @@
+"use client"
 import React from 'react'
+import { CgSpinner } from "react-icons/cg";
 
-export default function SignUpBtn() {
+interface SignUpBtnProps {
+  loading: boolean
+}
+
+export default function SignUpBtn({ loading }: SignUpBtnProps) {
   return (
-    <button className='w-full py-2 text-white rounded-md cursor-pointer hover:bg-blue-600 duration-200 bg-blue-500 font-medium'>
-      Sign Up
+    <button
+      type="submit"
+      disabled={loading}
+      className={`
+        relative w-full py-3 text-white rounded-xl font-semibold transition-all duration-200
+        flex items-center justify-center gap-2
+        ${loading
+          ? "bg-purple-400 cursor-not-allowed"
+          : "bg-purple-600 hover:bg-purple-700 active:scale-[0.98] shadow-md shadow-purple-100"}
+      `}
+    >
+      {loading ? (
+        <>
+          <CgSpinner className="animate-spin" size={20} />
+          <span>Creating Account...</span>
+        </>
+      ) : (
+        "Sign Up"
+      )}
     </button>
   )
 }

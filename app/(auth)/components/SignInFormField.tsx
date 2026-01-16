@@ -1,60 +1,102 @@
 "use client"
-import Link from 'next/link';
 import React, { ChangeEvent, FormEvent, useState } from 'react'
-import { FaEye, FaEyeSlash, FaGoogle, FaFacebook } from "react-icons/fa";
+import { useRouter } from 'next/navigation'
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import FormHeader from './FormHeader';
 import ForgetPassword from './ForgetPassword';
 import Separator from './Separator';
 import AuthWith from './AuthWith';
 import SignInBtn from './SignInBtn';
 
-
-
-
 export default function SignInFormField() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const [inputFields, setInputFields] = useState({
     email: "",
     password: ""
-  })
-  const [isShowPassword, setIsShowPassword] = useState(false)
+  });
+
+  const [isShowPassword, setIsShowPassword] = useState(false);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const {name, value} = e.target
-
+    const { name, value } = e.target;
+    setError("");
     setInputFields(prev => ({
       ...prev,
       [name]: value
-    }))
-  }
+    }));
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(inputFields)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Invalid email or password");
+      }
 
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-  }
+      router.push('/');
 
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <form onSubmit={handleSubmit} className='flex mt-10 flex-col gap-10 w-full max-w-md p-10 border border-gray-300 rounded-xl shadow-md'>
+    <form onSubmit={handleSubmit} className='flex mt-10 flex-col gap-8 w-full max-w-md p-10 border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/50 bg-white transition-all'>
 
-      <FormHeader title={"Helcome Back"} subTitle={"Manage your listings and AI content"} />
+      <FormHeader title={"Welcome Back"} subTitle={"Manage your listings and AI content"} />
 
-      <div className='flex flex-col gap-5 '>
-        <div className='flex flex-col items-start gap-2 w-full'>
-          <label htmlFor="email" className="text-sm font-medium">Email Address</label>
-          <input onChange={handleInputChange} value={inputFields.email} name='email' id='email' className='p-2 w-full focus:border-blue-400 focus:ring-1 focus:ring-blue-300 outline-none rounded-md border border-gray-300' type="email" placeholder='name@agency.com' required />
+      {/* Error Message Display */}
+      {error && (
+        <div className='bg-red-50 text-red-500 text-xs p-3 rounded-lg border border-red-100 animate-in fade-in slide-in-from-top-1'>
+          {error}
+        </div>
+      )}
+
+      <div className='flex flex-col gap-4'>
+        {/* Email Field */}
+        <div className='flex flex-col items-start gap-1.5 w-full'>
+          <label htmlFor="email" className="text-xs font-bold uppercase text-slate-500 tracking-wider">Email Address</label>
+          <input
+            onChange={handleInputChange}
+            value={inputFields.email}
+            name='email'
+            id='email'
+            className='p-2.5 w-full focus:border-purple-500 focus:ring-4 focus:ring-purple-50 outline-none rounded-xl border border-slate-200 transition-all placeholder:text-slate-300 text-sm'
+            type="email"
+            placeholder='name@agency.com'
+            required
+          />
         </div>
 
-        <div className='flex flex-col items-start gap-2 w-full'>
+        {/* Password Field */}
+        <div className='flex flex-col items-start gap-1.5 w-full'>
           <div className='flex items-center justify-between w-full'>
-            <label htmlFor="password" className=" text-sm font-medium">Password</label>
-            <ForgetPassword/>
+            <label htmlFor="password" className="text-xs font-bold uppercase text-slate-500 tracking-wider">Password</label>
+            <ForgetPassword />
           </div>
-          <div className='rounded-md border flex items-center justify-between border-gray-300 w-full px-2 focus-within:border-blue-400'>
+          <div className='rounded-xl border flex items-center justify-between border-slate-200 w-full px-3 focus-within:border-purple-500 focus-within:ring-4 focus-within:ring-purple-50 transition-all'>
             <input
-            onChange={handleInputChange}
-            name='password'
+              onChange={handleInputChange}
+              name='password'
               id='password'
-              className='p-2 w-full outline-none'
+              className='py-2.5 w-full outline-none bg-transparent text-sm'
               type={isShowPassword ? "text" : "password"}
               placeholder='********'
               value={inputFields.password}
@@ -63,7 +105,7 @@ export default function SignInFormField() {
             <button
               type="button"
               onClick={() => setIsShowPassword(!isShowPassword)}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-slate-400 hover:text-purple-600 transition-colors"
             >
               {isShowPassword ? <FaEyeSlash /> : <FaEye />}
             </button>
@@ -71,10 +113,10 @@ export default function SignInFormField() {
         </div>
       </div>
 
-      <div className='flex flex-col gap-5'>
-        <SignInBtn/>
-        <Separator/>
-        <AuthWith/>
+      <div className='flex flex-col gap-6'>
+        <SignInBtn loading={loading} />
+        <Separator />
+        <AuthWith />
       </div>
     </form>
   )

@@ -5,9 +5,12 @@ import Separator from './Separator'
 import AuthWith from './AuthWith'
 import { FaEyeSlash, FaEye } from 'react-icons/fa'
 import SignUpBtn from './SignUpBtn'
+import { useRouter } from 'next/navigation'
 
 export default function SignUpFormField() {
-
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [inputFields, setInputFields] = useState({
     fullname: "",
     email: "",
@@ -22,20 +25,48 @@ export default function SignUpFormField() {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    setError('')
     setInputFields(prev => ({
       ...prev,
       [name]: value
     }))
   }
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    setLoading(true)
+    setError('')
 
     if (inputFields.password !== inputFields.repeat) {
-      alert("Passwords do not match!")
+      setError("Password do not match!")
+      setLoading(false)
       return
     }
-    console.log("Form Data:", inputFields)
+
+    try {
+      const response = await fetch('/api/register', {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: inputFields.fullname,
+          email: inputFields.email,
+          password: inputFields.password
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message)
+      }
+
+      router.push('/')
+
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const toggleVisibility = (field: "pass" | 'confirm') => {
@@ -49,7 +80,13 @@ export default function SignUpFormField() {
     <form onSubmit={handleSubmit} className='flex mt-10 flex-col gap-10 w-full max-w-md p-10 border border-gray-300 rounded-xl shadow-md bg-white'>
 
       <FormHeader title={"Create Account"} subTitle={"Manage your listings and AI content"} />
-
+      {
+        error && (
+          <span className='p-2 bg-red-50 text-red-500 text-sm rounded-lg border-red-100 animate-shake'>
+            {error}
+          </span>
+        )
+      }
       <div className='flex flex-col gap-5'>
         {/* Full Name */}
         <div className='flex flex-col items-start gap-2 w-full'>
@@ -123,7 +160,7 @@ export default function SignUpFormField() {
       </div>
 
       <div className='flex flex-col gap-5'>
-        <SignUpBtn />
+        <SignUpBtn loading={loading} />
         <Separator />
         <AuthWith />
       </div>
