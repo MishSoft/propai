@@ -3,6 +3,7 @@ import Header from './components/Header/Header'
 import Filter from './components/Filter/Filter'
 import PriceRange from './components/PriceRange/PriceRange'
 import ListingItem from './components/ListingItem/ListingItem'
+import Listing from './components/Listing/Listing'
 
 export default function page() {
   return (
@@ -18,6 +19,8 @@ export default function page() {
           </div>
         ))}
       </div>
+
+      <Listing />
     </section>
   )
 }

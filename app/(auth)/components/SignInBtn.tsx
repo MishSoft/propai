@@ -17,10 +17,9 @@ export default function SignInBtn({ loading }: { loading: boolean }) {
       {loading ? (
         <>
           <CgSpinner className="animate-spin" size={20} />
-          <span>Creating Account...</span>
         </>
       ) : (
-        "Sign Up"
+          "Log In"
       )}
     </button>
   )

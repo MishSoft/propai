@@ -47,8 +47,8 @@ export default function SignInFormField() {
         throw new Error(data.message || "Invalid email or password");
       }
 
-
-      router.push('/');
+      // router.push('/')-ის ნაცვლად გამოიყენე ეს:
+      window.location.href = '/';
 
     } catch (err: any) {
       setError(err.message);
