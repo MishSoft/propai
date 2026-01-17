@@ -1,64 +1,124 @@
 "use client"
-import React, { useState } from 'react'
-import { FaImage, FaTimes, FaMagic, FaTrash } from "react-icons/fa";
-import { MdOutlineBedroomParent, MdOutlineBathtub, MdOutlineSquareFoot, MdDescription } from "react-icons/md";
+import { useUiStore } from '@/store/useUiStore';
+import React, { useEffect, useRef, useState } from 'react'
+import { FaImage, FaTimes, FaMagic, FaTrash, FaMapMarkerAlt, FaTag, FaUserTie, FaPhoneAlt } from "react-icons/fa";
+import { MdOutlineBedroomParent, MdOutlineBathtub, MdOutlineSquareFoot } from "react-icons/md";
+import { CldUploadWidget } from 'next-cloudinary';
 
 export default function Listing() {
+  const closeModal = useUiStore((state) => state.closeListingModal)
   const [showAiOptions, setShowAiOptions] = useState(false);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files).map((file) =>
-        URL.createObjectURL(file)
-      );
-      setSelectedImages((prevImages) => prevImages.concat(filesArray));
-    }
-  };
+  const [loading, setLoading] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null)
 
   const removeImage = (index: number) => {
     setSelectedImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
 
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        closeModal();
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [closeModal])
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+
+    // ვაგროვებთ მონაცემებს და გარდავქმნით შესაბამის ტიპებად (Int)
+    const data = {
+      city: (document.getElementById('city') as HTMLInputElement).value,
+      street: (document.getElementById('street') as HTMLInputElement).value,
+      price: parseInt((document.getElementById('price') as HTMLInputElement).value),
+      beds: parseInt((document.getElementById('rooms') as HTMLInputElement).value),
+      baths: parseInt((document.getElementById('baths') as HTMLInputElement).value),
+      sqft: parseInt((document.getElementById('sqft') as HTMLInputElement).value),
+      description: (document.getElementById('description') as HTMLTextAreaElement).value,
+      images: selectedImages,
+      // აგენტის მონაცემები
+      agentName: (document.getElementById('agentName') as HTMLInputElement).value,
+      agentPhone: (document.getElementById('agentPhone') as HTMLInputElement).value,
+    };
+
+    try {
+      const response = await fetch('/api/listings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        alert("Listing created successfully!");
+        closeModal();
+        window.location.reload();
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || "Something went wrong");
+      }
+    } catch (error) {
+      console.error("Submission Error:", error);
+      alert("Connection to server failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <section className='w-full h-screen bg-slate-900/20 backdrop-blur-md fixed top-0 left-0 z-50 flex items-center justify-center p-4 overflow-y-auto'>
-      <div className='relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200 my-auto'>
+    <section className='w-full h-screen bg-slate-900/60 backdrop-blur-md fixed top-0 left-0 z-50 flex items-center justify-center p-4 overflow-y-auto'>
+      <div ref={menuRef} className='relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200 my-auto'>
 
         {/* Header */}
-        <div className='flex items-center justify-between px-8 py-6 border-b border-slate-50'>
+        <div className='flex items-center justify-between px-10 py-8 border-b border-slate-50'>
           <div>
-            <h2 className='text-2xl font-bold text-slate-800'>Add New Listing</h2>
-            <p className='text-sm text-slate-500'>Fill in the details to list your apartment</p>
+            <h2 className='text-3xl font-black text-slate-900 tracking-tight'>Add New Listing</h2>
+            <p className='text-sm text-slate-400 font-medium'>Tell us more about your property</p>
           </div>
-          <button className='p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400'>
+          <button onClick={closeModal} className='p-3 hover:bg-slate-100 rounded-2xl transition-all text-slate-400 cursor-pointer active:scale-90'>
             <FaTimes size={20} />
           </button>
         </div>
 
-        <form className='p-8 flex flex-col gap-6'>
+        <form onSubmit={handleSubmit} className='p-10 flex flex-col gap-8 max-h-[75vh] overflow-y-auto'>
 
-          {/* Image Upload & Preview Area */}
+          {/* Cloudinary Image Upload Area */}
           <div className='flex flex-col gap-4'>
-            <label htmlFor="image" className='flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 hover:bg-purple-50/50 hover:border-purple-300 transition-all cursor-pointer group'>
-              <div className='flex flex-col items-center justify-center gap-2'>
-                <FaImage className='text-purple-500' size={24} />
-                <p className='text-sm font-semibold text-slate-700'>Add apartment images</p>
-              </div>
-              <input id='image' type="file" multiple className='hidden' onChange={handleImageChange} />
-            </label>
+            <CldUploadWidget
+              uploadPreset="propai_preset"
+              onSuccess={(result: any) => {
+                const url = result?.info?.secure_url;
+                if (url) {
+                  setSelectedImages((prev) => [...prev, url]);
+                }
+              }}
+              options={{ maxFiles: 10 }}
+            >
+              {({ open }) => (
+                <button
+                  type="button"
+                  onClick={() => open()}
+                  className='flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 hover:bg-purple-50 hover:border-purple-300 transition-all cursor-pointer group'
+                >
+                  <div className='w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-3 group-hover:scale-110 transition-transform'>
+                    <FaImage className='text-purple-600' size={24} />
+                  </div>
+                  <p className='text-sm font-black text-slate-700'>Upload Property Photos</p>
+                  <span className='text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1'>Cloudinary Secure Hosting</span>
+                </button>
+              )}
+            </CldUploadWidget>
 
-            {/* Image Preview Gallery */}
             {selectedImages.length > 0 && (
-              <div className='grid grid-cols-4 gap-4 animate-in fade-in duration-300'>
+              <div className='grid grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-2'>
                 {selectedImages.map((image, index) => (
-                  <div key={index} className='relative aspect-square rounded-xl overflow-hidden border border-slate-200 group'>
-                    <img src={image} alt="preview" className='w-full h-full object-cover' />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className='absolute cursor-pointer top-1 right-1 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg'
-                    >
-                      <FaTrash size={10} />
+                  <div key={index} className='relative aspect-square rounded-2xl overflow-hidden border-2 border-slate-100 group shadow-sm'>
+                    <img src={image} alt="preview" className='w-full h-full object-cover transition-transform group-hover:scale-110' />
+                    <button type="button" onClick={() => removeImage(index)} className='absolute cursor-pointer top-2 right-2 p-2 bg-red-500/90 backdrop-blur-sm text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600'>
+                      <FaTrash size={12} />
                     </button>
                   </div>
                 ))}
@@ -66,71 +126,78 @@ export default function Listing() {
             )}
           </div>
 
-          {/* Details Grid */}
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-            <div className='flex flex-col gap-2'>
-              <label className='flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider' htmlFor="rooms">
-                <MdOutlineBedroomParent size={16} /> Rooms
-              </label>
-              <input className='w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-purple-50 focus:border-purple-400 transition-all text-slate-700' id='rooms' type="number" placeholder='3' />
+          {/* Main Info */}
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div className='flex flex-col gap-2.5'>
+              <label className='flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest' htmlFor="city"><FaMapMarkerAlt /> City</label>
+              <input required className='w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-purple-400 font-bold text-slate-700' id='city' type="text" placeholder='Tbilisi' />
             </div>
-
-            <div className='flex flex-col gap-2'>
-              <label className='flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider' htmlFor="baths">
-                <MdOutlineBathtub size={16} /> Baths
-              </label>
-              <input className='w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-purple-50 focus:border-purple-400 transition-all text-slate-700' id='baths' type="number" placeholder='2' />
-            </div>
-
-            <div className='flex flex-col gap-2'>
-              <label className='flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider' htmlFor="sqft">
-                <MdOutlineSquareFoot size={16} /> Sqft
-              </label>
-              <input className='w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-purple-50 focus:border-purple-400 transition-all text-slate-700' id='sqft' type="number" placeholder='1200' />
+            <div className='flex flex-col gap-2.5'>
+              <label className='flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest' htmlFor="price"><FaTag /> Price (USD)</label>
+              <input required className='w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-purple-400 font-bold text-slate-700' id='price' type="number" placeholder='85000' />
             </div>
           </div>
 
-          {/* Description Field with AI */}
-          <div className='flex flex-col gap-2 relative'>
+          <div className='flex flex-col gap-2.5'>
+            <label className='flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest' htmlFor="street"><FaMapMarkerAlt /> Street Address</label>
+            <input required className='w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-purple-400 font-bold text-slate-700' id='street' type="text" placeholder='Pekini Ave. 15' />
+          </div>
+
+          <div className='grid grid-cols-3 gap-6'>
+            <InputWithIcon id="rooms" label="Rooms" icon={<MdOutlineBedroomParent size={18} />} />
+            <InputWithIcon id="baths" label="Baths" icon={<MdOutlineBathtub size={18} />} />
+            <InputWithIcon id="sqft" label="Sqft" icon={<MdOutlineSquareFoot size={18} />} />
+          </div>
+
+          {/* Description */}
+          <div className='flex flex-col gap-2.5'>
             <div className='flex items-center justify-between'>
-              <label className='flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider' htmlFor="description">
-                <MdDescription size={16} /> Description
-              </label>
+              <label className='text-[10px] font-black text-slate-400 uppercase tracking-widest' htmlFor="description">Property Description</label>
+              <button type='button' onClick={() => setShowAiOptions(!showAiOptions)} className='flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] font-black rounded-xl hover:shadow-lg hover:shadow-purple-200 transition-all cursor-pointer active:scale-95 uppercase tracking-wider'>
+                <FaMagic /> AI Rewrite
+              </button>
+            </div>
+            <textarea id="description" rows={4} className='w-full p-5 bg-slate-50 border border-slate-200 rounded-[2rem] outline-none focus:border-purple-400 resize-none font-medium text-slate-600' placeholder='Tell potential buyers about the unique features...' />
+          </div>
 
-              <div className='relative'>
-                <button
-                  type='button'
-                  onClick={() => setShowAiOptions(!showAiOptions)}
-                  className='flex items-center gap-2 px-3 py-1.5 bg-linear-to-r from-purple-500 to-indigo-600 text-white text-[10px] font-bold uppercase rounded-lg hover:shadow-lg transition-all'
-                >
-                  <FaMagic size={10} /> AI Generate
-                </button>
-
-                {showAiOptions && (
-                  <div className='absolute right-0 bottom-full mb-2 w-32 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-10'>
-                    {['Georgian', 'English', 'Russian'].map((lang) => (
-                      <button key={lang} type='button' className='w-full text-left px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-purple-50' onClick={() => setShowAiOptions(false)}>
-                        {lang}
-                      </button>
-                    ))}
-                  </div>
-                )}
+          {/* Agent Information - NEW SECTION */}
+          <div className='pt-8 border-t border-slate-100 flex flex-col gap-6'>
+            <h3 className='text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]'>Agent Contact Information</h3>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+              <div className='flex flex-col gap-2.5'>
+                <label className='flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest' htmlFor="agentName"><FaUserTie /> Agent Full Name</label>
+                <input required className='w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-purple-400 font-bold text-slate-700' id='agentName' type="text" placeholder='Giorgi Makharashvili' />
+              </div>
+              <div className='flex flex-col gap-2.5'>
+                <label className='flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest' htmlFor="agentPhone"><FaPhoneAlt /> Phone Number</label>
+                <input required className='w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-purple-400 font-bold text-slate-700' id='agentPhone' type="text" placeholder='+995 5xx xxx xxx' />
               </div>
             </div>
-
-            <textarea
-              id="description"
-              rows={3}
-              className='w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-purple-50 focus:border-purple-400 transition-all text-slate-700 resize-none'
-              placeholder='Describe the highlights...'
-            ></textarea>
           </div>
 
-          <button type="submit" className='w-full cursor-pointer py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl shadow-lg transition-all active:scale-[0.98]'>
-            Create Listing
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-5 ${loading ? 'bg-slate-200 cursor-not-allowed text-slate-400' : 'bg-slate-900 hover:bg-purple-600 text-white shadow-xl shadow-slate-200'} font-black rounded-4xl transition-all duration-300 active:scale-[0.98] cursor-pointer mt-4 text-sm uppercase tracking-widest`}
+          >
+            {loading ? 'Processing...' : 'Publish Listing'}
           </button>
         </form>
       </div>
     </section>
+  )
+}
+
+// დამხმარე კომპონენტი ინფუთებისთვის
+function InputWithIcon({ id, label, icon }: { id: string, label: string, icon: any }) {
+  return (
+    <div className='flex flex-col gap-2.5 text-center items-center'>
+      <label className='flex items-center justify-center gap-2 text-[9px] font-black text-slate-400 uppercase tracking-tighter' htmlFor={id}>
+        {icon}
+      </label>
+      <input required className='w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-purple-400 text-center font-black text-slate-700' id={id} type="number" placeholder="0" />
+      <span className='text-[10px] font-bold text-slate-400 uppercase'>{label}</span>
+    </div>
   )
 }

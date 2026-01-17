@@ -15,29 +15,36 @@ datasource db {
 
 
 model User {
-  id        String   @id @default(cuid())
-  fullName  String
-  email     String   @unique
-  password  String
-  posts     Post[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  fullName    String
+  email       String   @unique
+  password    String
+
+  // მაკლერისთვის საჭირო დამატებითი ველები
+  phone       String?  // ტელეფონი საკონტაქტოდ
+  image       String?  // პროფილის სურათი
+  role        String   @default("Agent") // მაგ: "Premium Agent", "Broker"
+
+  posts       Post[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Post {
   id          String   @id @default(cuid())
   title       String
-  image       String
+  images      String[]
   description String
   city        String
   street      String
-  price       Int      // ფასი მაინც დავტოვოთ Int, რომ მომავალში დალაგება (Sorting) შეძლო
+  price       Int
 
-  // ListingItem-ისთვის საჭირო ველები (რომ დინამიური იყოს)
+  // ბინის მახასიათებლები
   beds        Int      @default(0)
   baths       Int      @default(0)
   sqft        Int      @default(0)
 
+  // კავშირი მაკლერთან
   author      User     @relation(fields: [authorId], references: [id])
   authorId    String
 

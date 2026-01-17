@@ -18,16 +18,7 @@ export default function Search() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search listings, buyers or locations..."
-          className="
-            w-full pl-12 pr-10 py-3
-            bg-white border border-slate-200
-            rounded-2xl text-sm font-medium text-slate-900
-            placeholder:text-slate-400
-            outline-none transition-all duration-200
-            hover:border-slate-300
-            focus:border-purple-500 focus:ring-4 focus:ring-purple-50
-            shadow-sm
-          "
+          className="w-full pl-12 pr-10 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:border-purple-400 focus:ring-4 focus:ring-purple-50 transition-all text-sm font-medium text-slate-600 placeholder:text-slate-400 shadow-sm"
         />
 
         {query && (
