@@ -20,7 +20,6 @@ export default function Gallery({ images }: GalleryProps) {
 
   return (
     <div className="w-full h-full flex flex-col bg-white overflow-hidden">
-      {/* მთავარი სლაიდერი */}
       <div className="relative flex-1 w-full overflow-hidden">
         <Swiper
           style={{
@@ -43,7 +42,7 @@ export default function Gallery({ images }: GalleryProps) {
                   alt={`Property image ${idx + 1}`}
                   fill
                   priority={idx === 0}
-                  className="object-cover" // სურათი ყოველთვის შეავსებს კონტეინერს
+                  className="object-cover"
                   sizes="(max-width: 768px) 100vw, 60vw"
                 />
               </div>
@@ -52,7 +51,6 @@ export default function Gallery({ images }: GalleryProps) {
         </Swiper>
       </div>
 
-      {/* Thumbnails - მხოლოდ კომპიუტერზე, რომ მობილურზე ადგილი არ წაიღოს */}
       {images.length > 1 && (
         <div className="hidden md:block p-3 bg-white border-t border-slate-100 h-24 shrink-0">
           <Swiper
@@ -81,7 +79,7 @@ export default function Gallery({ images }: GalleryProps) {
       )}
 
       <style jsx global>{`
-        /* ისრების და პაგინაციის სტილები */
+
         .swiper-button-next, .swiper-button-prev {
           width: 35px !important;
           height: 35px !important;
