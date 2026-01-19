@@ -23,6 +23,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
+    if (!user.password) {
+  return NextResponse.json(
+    { message: "This account uses social login. Please sign in with Google/Facebook." },
+    { status: 400 }
+  );
+}
+
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
     if (!isPasswordCorrect) {
@@ -32,7 +39,7 @@ export async function POST(req: Request) {
     const token = await new SignJWT({
       id: user.id,
       email: user.email,
-      fullName: user.fullName
+      fullName: user.name
     })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
@@ -42,7 +49,7 @@ export async function POST(req: Request) {
     // 2. პასუხის მომზადება
     const response = NextResponse.json({
       message: "Login successful",
-      user: { id: user.id, email: user.email, fullName: user.fullName }
+      user: { id: user.id, email: user.email, fullName: user.name }
     }, { status: 200 });
 
     const cookieStore = await cookies();

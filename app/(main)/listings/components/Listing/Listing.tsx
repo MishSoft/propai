@@ -139,7 +139,7 @@ export default function Listing() {
                 type='button'
                 onClick={handleAiRewrite}
                 disabled={aiLoading}
-                className='flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] font-black rounded-xl uppercase tracking-wider hover:shadow-lg disabled:opacity-50'
+                className='flex items-center gap-2 px-4 py-2 bg-linear-to-r from-purple-600 to-indigo-600 text-white text-[10px] font-black rounded-xl uppercase tracking-wider hover:shadow-lg disabled:opacity-50'
               >
                 <FaMagic /> {aiLoading ? 'Processing...' : 'AI Professionalize'}
               </button>
