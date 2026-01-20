@@ -1,41 +1,68 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { jwtVerify } from "jose";
-import { cookies } from "next/headers";
-
-// დარწმუნდი, რომ ეს Secret ემთხვევა შენი ავტორიზაციის Secret-ს
-const SECRET = new TextEncoder().encode(process.env.NEXT_JWT_SECRET || "your-secret-key-123");
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
     // 1. ავტორიზაციის შემოწმება
-    const cookieStore = await cookies();
-    const token = cookieStore.get("auth_token")?.value;
+    const session = await getServerSession(authOptions);
 
-    if (!token) {
+    if (!session || !session.user) {
       return NextResponse.json({ error: "ავტორიზაცია საჭიროა" }, { status: 401 });
     }
 
-    let payload;
-    try {
-      const verified = await jwtVerify(token, SECRET);
-      payload = verified.payload;
-    } catch (err) {
-      return NextResponse.json({ error: "სესია ამოიწურა, თავიდან გაიარეთ ავტორიზაცია" }, { status: 401 });
-    }
+    // @ts-ignore
+    const userId = session.user.id;
+    // @ts-ignore
+    const userPlan = (session.user.plan || "lite").toLowerCase();
 
-    const userId = payload.id as string;
     const body = await req.json();
 
-    // 2. მონაცემების ამოღება და გარდაქმნა (NaN-ის პრევენცია)
-    const { city, street, price, rooms, baths, sqft, description, images } = body;
+    // 2. ლიმიტების შემოწმება
+    const planLimits: Record<string, number> = {
+      lite: 5,
+      agent: 20,
+      pro: 50,
+    };
 
+    const limit = planLimits[userPlan] || 5;
+
+    const currentPostsCount = await db.post.count({
+      where: { authorId: userId },
+    });
+
+    if (currentPostsCount >= limit) {
+      return NextResponse.json(
+        { error: `თქვენ ამოწურეთ ლიმიტი (${limit} პოსტი). განაახლეთ პაკეტი.` },
+        { status: 403 }
+      );
+    }
+
+    // 3. მონაცემების ამოღება და გარდაქმნა
+    const {
+      city,
+      street,
+      price,
+      rooms,
+      baths,
+      sqft,
+      description,
+      images,
+      category,      // 🔥 ახალი: Sale ან Rent
+      propertyType,  // 🔥 ახალი: Apartment ან House
+      condition,     // 🔥 ახალი: New ან Old
+      floor          // 🔥 ახალი: სართული
+    } = body;
+
+    // უსაფრთხო გარდაქმნა რიცხვებად
     const safePrice = parseInt(price) || 0;
     const safeBeds = parseInt(rooms) || 0;
     const safeBaths = parseInt(baths) || 0;
     const safeSqft = parseInt(sqft) || 0;
+    const safeFloor = parseInt(floor) || 1;
 
-    // 3. პოსტის შექმნა
+    // 4. პოსტის შექმნა განახლებულ ბაზაში
     const newPost = await db.post.create({
       data: {
         title: street || "No Title",
@@ -45,18 +72,20 @@ export async function POST(req: Request) {
         beds: safeBeds,
         baths: safeBaths,
         sqft: safeSqft,
+        floor: safeFloor,              // 🔥
+        category: category || "Sale",   // 🔥
+        propertyType: propertyType || "Apartment", // 🔥
+        condition: condition || "New",  // 🔥
         description: description || "",
         images: images || [],
-        // დაკავშირება ავტორთან (User)
         author: {
           connect: { id: userId }
         }
       },
-      // პასუხშივე გამოვაყოლოთ ავტორის მონაცემები
       include: {
         author: {
           select: {
-            fullName: true,
+            name: true,
             phone: true,
             image: true,
             role: true
@@ -79,14 +108,11 @@ export async function POST(req: Request) {
 export async function GET() {
   try {
     const listings = await db.post.findMany({
-      orderBy: {
-        createdAt: 'desc'
-      },
-      // აუცილებელია Frontend-ისთვის, რომ აგენტის ინფორმაცია გამოჩნდეს
+      orderBy: { createdAt: 'desc' },
       include: {
         author: {
           select: {
-            fullName: true,
+            name: true,
             phone: true,
             image: true,
             role: true
@@ -94,13 +120,9 @@ export async function GET() {
         }
       }
     });
-
     return NextResponse.json(listings);
   } catch (error: any) {
     console.error("GET Error:", error);
-    return NextResponse.json(
-      { error: "განცხადებების წამოღება ვერ მოხერხდა" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "განცხადებების წამოღება ვერ მოხერხდა" }, { status: 500 });
   }
 }

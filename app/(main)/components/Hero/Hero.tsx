@@ -4,13 +4,30 @@ import HeroCards from './HeroCards'
 import { AiOutlineHome } from "react-icons/ai";
 import { MdPeopleOutline } from "react-icons/md";
 import { SiGooglegemini } from "react-icons/si";
+import { FaBuilding } from 'react-icons/fa';
+import { authOptions } from '@/lib/auth';
+import db from '@/lib/db';
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
 
-export default function Hero() {
+export default async function Hero() {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user) {
+    redirect("/login");
+  }
+
+  const listingsCount = await db.post.count({
+    where: { authorId: session.user.id }
+  });
   return (
     <section className='my-10 grid md:grid-cols-2 xl:grid-cols-3 items-center gap-2'>
-      <HeroCards title={'active listings'} icon={AiOutlineHome} number={24} increment={'+2 % vs last month'}/>
-      <HeroCards title={'total buyers'} icon={MdPeopleOutline} number={142} increment={'-1 % vs last month'} />
-      <HeroCards title={'pending descriptions'} icon={SiGooglegemini} number={5} increment={'+5 drafts today'} />
+      <HeroCards
+        title="Total Listings"
+        icon={FaBuilding}
+        number={listingsCount}
+        increment="+2"
+      />
     </section>
   )
 }

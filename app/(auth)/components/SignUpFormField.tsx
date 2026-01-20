@@ -154,7 +154,7 @@ export default function SignUpFormField() {
                 ))}
               </ul>
               {plan.trial && (
-                <div className='absolute -top-2 -right-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-[9px] font-black px-3 py-1 rounded-full shadow-md uppercase'>
+                <div className='absolute -top-2 -right-2 bg-linear-to-r from-purple-600 to-blue-600 text-white text-[9px] font-black px-3 py-1 rounded-full shadow-md uppercase'>
                   Free Trial Available
                 </div>
               )}

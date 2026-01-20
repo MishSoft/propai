@@ -7,9 +7,9 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
+model User { 
   id            String    @id @default(cuid())
-  name        String?
+  name          String?
   email         String?   @unique
   password      String?   // Optional სოციალური ავტორიზაციისთვის
   emailVerified DateTime? // NextAuth-სთვის აუცილებელია
@@ -26,6 +26,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   posts         Post[]
+  buyers        Buyer[]   // <-- დაემატა კავშირი კლიენტებთან
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -38,12 +39,12 @@ model Account {
   type               String
   provider           String
   providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
   expires_at         Int?
   token_type         String?
   scope              String?
-  id_token           String?  @db.Text
+  id_token           String? @db.Text
   session_state      String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -63,18 +64,51 @@ model Post {
   id          String   @id @default(cuid())
   title       String
   images      String[]
-  description String
+  description String   @db.Text
   city        String
   street      String
   price       Int
 
+  // ძირითადი მახასიათებლები
   beds        Int      @default(0)
   baths       Int      @default(0)
   sqft        Int      @default(0)
+  floor       Int      @default(1) // <-- დაემატა სართული
+
+  // ახალი ველები კატეგორიზაციისთვის
+  category     String   @default("Sale")      // Sale (იყიდება) ან Rent (ქირავდება)
+  propertyType String   @default("Apartment") // Apartment (ბინა) ან House (სახლი)
+  condition    String   @default("New")       // New (ახალი) ან Old (ძველი)
 
   author      User     @relation(fields: [authorId], references: [id])
   authorId    String
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Buyer {
+  id           String   @id @default(cuid())
+  name         String   // კლიენტის სახელი
+  phone        String   // კლიენტის ნომერი
+  location     String   // სასურველი მდებარეობა (უბანი/ქალაქი)
+
+  category     String   // Buy (ყიდვა) ან Rent (ქირავდება)
+  propertyType String   // Apartment (ბინა) ან House (სახლი)
+
+  minRooms     Int      @default(1)
+  minBaths     Int      @default(1)
+  budget       Int      // მაქსიმალური ბიუჯეტი
+
+  // დამატებითი პირობები
+  preferredCondition String @default("Any") // New, Old, Any
+  description        String? @db.Text       // კლიენტის კომენტარი (ხედი, აივანი და ა.შ.)
+
+  status       String   @default("New") // მართვისთვის: New, Contacted, Viewing, Closed
+
+  author       User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId     String
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

@@ -63,9 +63,9 @@ export default function ListingItem({ item, isPublic = false }: { item: ListingT
         <button
           onClick={() => {
             if (isPublic) {
-              router.push(`/listings/${item.id}`); // გადადის დეტალურ გვერდზე
+              router.push(`/listings/${item.id}`);
             } else {
-              openDetails(item); // ხსნის მოდალს მაკლერისთვის
+              openDetails(item);
             }
           }}
           className='mt-auto flex items-center justify-center gap-3 w-full py-4 bg-slate-900 text-white text-sm font-bold rounded-[1.25rem] hover:bg-purple-600 transition-all duration-300 shadow-xl shadow-slate-200 active:scale-95 cursor-pointer group/btn'

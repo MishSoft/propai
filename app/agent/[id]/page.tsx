@@ -39,7 +39,7 @@ export default async function AgentPortfolioPage({ params }: { params: Promise<{
               <FaUserTie size={32} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">{agent.fullName}</h1>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight">{agent.name}</h1>
               <p className="text-[10px] font-bold text-purple-600 uppercase tracking-widest">Verified Partner</p>
             </div>
           </div>

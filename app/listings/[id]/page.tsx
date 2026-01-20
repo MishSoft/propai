@@ -54,7 +54,7 @@ export default async function ListingDetailsPage({ params }: { params: Promise<{
           {/* აგენტის საკონტაქტო ბლოკი */}
           <div className="mt-auto pt-8 border-t border-slate-100 bg-white sticky bottom-0">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">დაინტერესდით? დაუკავშირდით აგენტს</p>
-            <h3 className="text-xl font-black text-slate-900 mb-6">{listing.author?.fullName}</h3>
+            <h3 className="text-xl font-black text-slate-900 mb-6">{listing.author?.name}</h3>
 
             <div className="flex gap-3">
               <a

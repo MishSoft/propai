@@ -5,8 +5,9 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import db from "@/lib/db";
 
 const handler = NextAuth({
-  // PrismaAdapter ავტომატურად შექმნის მომხმარებელს ბაზაში, თუ ის პირველად შედის
   adapter: PrismaAdapter(db),
+  // აუცილებელია მივუთითოთ secret აქაც
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -16,29 +17,32 @@ const handler = NextAuth({
     FacebookProvider({
       clientId: process.env.FACEBOOK_CLIENT_ID as string,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET as string,
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
   pages: {
-    signIn: '/login', // ჩვენი login გვერდი
+    signIn: '/login',
+    error: '/login', // შეცდომის შემთხვევაშიც აქ დარჩეს
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 დღე
   },
   callbacks: {
-   async jwt({ token, user }) {
-      // როცა იუზერი პირველად შედის, ბაზიდან ამოვიღოთ მონაცემები
+    async jwt({ token, user, trigger }) {
+      // როცა იუზერი პირველად შედის (Initial sign in)
       if (user) {
-        const dbUser = await db.user.findUnique({
-          where: { email: user.email! }
-        });
-        if (dbUser) {
-          token.role = dbUser.role;
-          token.plan = dbUser.plan;
-          token.id = dbUser.id;
-        }
+        token.id = user.id;
+        // @ts-ignore
+        token.role = user.role;
+        // @ts-ignore
+        token.plan = user.plan;
       }
+
+      // ხანდახან საჭიროა მონაცემების განახლება ბაზიდან, თუ რამე შეიცვალა
       return token;
     },
+    // თუ არ მუშაობს, ჩართე და ტერმინალში დეტალებს დაგიწერს
     async session({ session, token }) {
       if (token && session.user) {
         // @ts-ignore
@@ -51,6 +55,18 @@ const handler = NextAuth({
       return session;
     },
   },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false
+      }
+    }
+  },
+  debug: true, // თუ ისევ არ იმუშავა, ეს ჩართე და ტერმინალში დეტალებს დაგიწერს
 });
 
 export { handler as GET, handler as POST };
