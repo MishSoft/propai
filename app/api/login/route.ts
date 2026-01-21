@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import bcrypt from "bcrypt";
-import { SignJWT } from "jose";
-import { cookies } from "next/headers";
-
-const SECRET = new TextEncoder().encode(process.env.NEXT_JWT_SECRET || "your-secret-key-123");
+import { encode } from "next-auth/jwt"; // აუცილებელი იმპორტი
 
 export async function POST(req: Request) {
   try {
@@ -24,36 +21,39 @@ export async function POST(req: Request) {
     }
 
     if (!user.password) {
-  return NextResponse.json(
-    { message: "This account uses social login. Please sign in with Google/Facebook." },
-    { status: 400 }
-  );
-}
+      return NextResponse.json(
+        { message: "This account uses social login. Please sign in with Google/Facebook." },
+        { status: 400 }
+      );
+    }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
-
     if (!isPasswordCorrect) {
       return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
     }
 
-    const token = await new SignJWT({
-      id: user.id,
-      email: user.email,
-      fullName: user.name
-    })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setExpirationTime("24h")
-      .sign(SECRET);
+    // 🔥 აი აქ არის მთავარი ცვლილება:
+    // ვიყენებთ NextAuth-ის encode-ს, რომ ტოკენი იყოს JWE ფორმატში
+    const token = await encode({
+      token: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        plan: "",
+        role: ""
+      },
+      // აუცილებლად გამოიყენე ის საიდუმლო გასაღები, რაც .env-ში გაქვს NEXTAUTH_SECRET-ად
+      secret: process.env.NEXTAUTH_SECRET || "your-secret-key-123",
+      maxAge: 60 * 60 * 24,
+    });
 
-    // 2. პასუხის მომზადება
     const response = NextResponse.json({
       message: "Login successful",
-      user: { id: user.id, email: user.email, fullName: user.name }
+      user: { id: user.id, email: user.email, name: user.name }
     }, { status: 200 });
 
-    const cookieStore = await cookies();
-    cookieStore.set("auth_token", token, {
+    // ვინარჩუნებთ შენს ქუქის სახელს, რომ არაფერი აირიოს
+    response.cookies.set("next-auth.session-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

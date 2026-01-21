@@ -1,59 +1,48 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id: agentId } = await params; // მაკლერის ID URL-იდან
+    const { id: agentId } = await params;
     const body = await req.json();
+    const { name, phone, location, category, propertyType, budget, description } = body;
 
-    const agentExists = await db.user.findUnique({
-  where: { id: agentId }
-});
-
-if (!agentExists) {
-  return NextResponse.json({ error: "მაკლერი ვერ მოიძებნა" }, { status: 404 });
-}
-
-    const {
-      name,
-      phone,
-      location,
-      category,
-      propertyType,
-      minRooms,
-      minBaths,
-      budget,
-      description
-    } = body;
-
-    // 1. ვალიდაცია: სახელი და ნომერი აუცილებელია
-    if (!name || !phone) {
-      return NextResponse.json({ error: "სახელი და ნომერი აუცილებელია" }, { status: 400 });
-    }
-
-    // 2. კლიენტის (Buyer) შექმნა ბაზაში
+    // 1. Buyer-ის შექმნა (ეს ხომ მუშაობს)
     const newBuyer = await db.buyer.create({
       data: {
         name,
-        phone,
-        location,
+        phone: String(phone),
+        location: location || "თბილისი",
         category,
         propertyType,
-        minRooms: parseInt(minRooms) || 1,
-        minBaths: parseInt(minBaths) || 1,
-        budget: parseInt(budget) || 0,
-        description,
-        authorId: agentId, // აი აქ ვაბამთ კონკრეტულ მაკლერს
+        budget: Number(budget) || 0,
+        description: description || "",
+        authorId: agentId,
       },
     });
 
-    return NextResponse.json({ message: "მონაცემები წარმატებით გაიგზავნა" }, { status: 201 });
+    // 2. დიაგნოსტიკა: ვნახოთ რას ხედავს DB ობიექტი
+    console.log("Available models in DB:", Object.keys(db));
 
-  } catch (error: any) {
-    console.error("CONTACT_FORM_ERROR:", error);
-    return NextResponse.json({ error: "გაგზავნისას მოხდა შეცდომა" }, { status: 500 });
+    // 3. უსაფრთხო ჩაწერა - მივმართოთ დინამიურად
+    const modelName = 'notification';
+    if (modelName in db) {
+      await (db as any)[modelName].create({
+        data: {
+          userId: agentId,
+          type: "NEW_BUYER",
+          message: `ახალი კლიენტი: ${name} დაინტერესდა ${category}.`,
+          buyerId: newBuyer.id,
+        }
+      });
+    } else {
+      console.error("❌ Notification model still not found in Prisma Client!");
+    }
+
+    return NextResponse.json({ success: true, newBuyer });
+
+  } catch (error) {
+    console.error("CONTACT_POST_ERROR:", error);
+    return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }
 }

@@ -2,26 +2,31 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { description, languages } = await req.json();
+    const body = await req.json();
+    const { description, languages } = body as { description: string, languages: string[] };
 
-    // 1. შემოწმება, გვაქვს თუ არა API Key
-    if (!process.env.GROQ_API_KEY) {
-      console.error("❌ GROQ_API_KEY missing in .env");
-      return NextResponse.json({ error: "API Key missing" }, { status: 500 });
+    // 1. ვალიდაცია - აუცილებელია, რომ მონაცემები მოვიდეს
+    if (!description || !languages || !Array.isArray(languages) || languages.length === 0) {
+      return NextResponse.json({ error: "გთხოვთ მიუთითოთ აღწერა და ენები" }, { status: 400 });
     }
 
-    // 2. ვაწყობთ სისტემურ ინსტრუქციას (System Prompt)
-    // აქ ვეუბნებით AI-ს, თუ როგორ უნდა მოიქცეს
+    if (!process.env.GROQ_API_KEY) {
+      console.error("❌ GROQ_API_KEY missing");
+      return NextResponse.json({ error: "სერვერის კონფიგურაციის შეცდომა" }, { status: 500 });
+    }
+
+    // 2. სისტემური ინსტრუქცია (უფრო კონკრეტული)
     const systemInstruction = `
       შენ ხარ უძრავი ქონების გაყიდვების ექსპერტი.
-      შენი დავალებაა მომხმარებლის მიერ მოწოდებული მოკლე ინფორმაცია გადააქციო პროფესიონალურ და მიმზიდველ განცხადებად.
+      დავალება: გადააქციე მოწოდებული ტექსტი პროფესიონალურ განცხადებად.
+      ენები: ${languages.join(", ")}.
 
-      წესები:
-      1. დააბრუნე ტექსტი შემდეგ ენებზე: ${languages.join(", ")}.
-      2. თითოეული ენა გამოყავი დროშის ემოჯით და სათაურით (მაგ: 🇬🇪 ქართული, 🇬🇧 English, 🇷🇺 Русский).
-      3. გამოიყენე აბზაცები, ბულეტები (bullet points) და შესაბამისი ემოჯები, რომ ტექსტი იყოს ადვილად წასაკითხი.
-      4. ხაზი გაუსვი ბინის უპირატესობებს (ლოკაცია, ნათელი ოთახები, ხედი და ა.შ.).
-      5. პასუხში დააბრუნე მხოლოდ გამზადებული აღწერები, ზედმეტი მისალმების ("აი თქვენი ტექსტი") გარეშე.
+      ფორმატირება:
+      - გამოიყენე აბზაცები და ბულეტები.
+      - დაამატე შესაბამისი ემოჯები.
+      - თითოეული ენის აღწერა გამოყავი მკაფიოდ სათაურით.
+      - დააბრუნე მხოლოდ გამზადებული აღწერები.
+      - არავითარი მისალმება ან დამატებითი კომენტარი.
     `;
 
     // 3. მიმართვა Groq API-სთან
@@ -34,39 +39,33 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         messages: [
-          {
-            role: "system",
-            content: systemInstruction
-          },
-          {
-            role: "user",
-            content: `გადააკეთე ეს აღწერა: "${description}"`
-          }
+          { role: "system", content: systemInstruction },
+          { role: "user", content: `ტექსტი დასამუშავებლად: ${description}` }
         ],
-        temperature: 0.7, // კრეატიულობის დონე
-        max_tokens: 2048
+        temperature: 0.6, // 0.6 უფრო სტაბილურია პროფესიონალური ტექსტისთვის
+        max_tokens: 2048,
+        top_p: 1,
       }),
     });
 
     const data = await response.json();
 
-    // 4. შეცდომების მართვა
     if (!response.ok) {
-      console.error("🔥 Groq API Error:", data);
-      return NextResponse.json({ error: data.error?.message || "AI Error" }, { status: response.status });
+      return NextResponse.json({ error: data.error?.message || "AI API Error" }, { status: response.status });
     }
 
-    // 5. პასუხის დაბრუნება
-    const rewrittenText = data.choices[0]?.message?.content;
+    const rewrittenText = data.choices?.[0]?.message?.content;
 
     if (!rewrittenText) {
-      throw new Error("AI-მ პასუხი ვერ დააგენერირა");
+      return NextResponse.json({ error: "AI-მ პასუხი ვერ დააგენერირა" }, { status: 500 });
     }
 
     return NextResponse.json({ rewrittenText });
 
-  } catch (error: any) {
-    console.error("❌ SERVER ERROR:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    // Error handling any-ს გარეშე
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    console.error("❌ AI_ROUTE_ERROR:", errorMessage);
+    return NextResponse.json({ error: "სერვერის შეცდომა" }, { status: 500 });
   }
 }

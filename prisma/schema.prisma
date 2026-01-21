@@ -1,13 +1,12 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../app/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-model User { 
+model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
@@ -18,6 +17,7 @@ model User {
   phone         String?
   image         String?
   role          String    @default("Agent")
+  floor Int?      @default(1) // მაკლერის სართული ოფისში
 
   // პაკეტის ველი - აქ შეინახება "lite", "pro" ან "ultimate"
   plan          String    @default("lite")
@@ -26,7 +26,8 @@ model User {
   accounts      Account[]
   sessions      Session[]
   posts         Post[]
-  buyers        Buyer[]   // <-- დაემატა კავშირი კლიენტებთან
+  buyers        Buyer[]
+  notifications Notification[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -67,7 +68,7 @@ model Post {
   description String   @db.Text
   city        String
   street      String
-  price       Int
+  price       Float
 
   // ძირითადი მახასიათებლები
   beds        Int      @default(0)
@@ -98,7 +99,7 @@ model Buyer {
 
   minRooms     Int      @default(1)
   minBaths     Int      @default(1)
-  budget       Int      // მაქსიმალური ბიუჯეტი
+  budget       Float      // მაქსიმალური ბიუჯეტი
 
   // დამატებითი პირობები
   preferredCondition String @default("Any") // New, Old, Any
@@ -111,4 +112,21 @@ model Buyer {
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   @default("NEW_BUYER") // მაგ: "NEW_BUYER", "SYSTEM"
+  message   String   // "ახალი კლიენტი: [სახელი] დაინტერესდა"
+  isRead    Boolean  @default(false)
+
+  // კავშირი მაკლერთან
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // სურვილისამებრ: კავშირი კონკრეტულ Buyer-თან
+  buyerId   String?
+
+  createdAt DateTime @default(now())
 }

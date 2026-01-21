@@ -12,11 +12,18 @@ export default function ContactForm({ agentId }: { agentId: string }) {
     location: "",
     category: "Buy",
     propertyType: "Apartment",
+    floor: "1", // <-- სართული დაემატა სთეითში
     minRooms: "1",
     minBaths: "1",
     budget: "",
     description: "",
   });
+
+  // სართულების ოპციები 1-დან 20-მდე
+  const floorOptions = Array.from({ length: 20 }, (_, i) => ({
+    label: (i + 1).toString(),
+    value: (i + 1).toString(),
+  }));
 
   const handleChange = (e: any) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -60,7 +67,7 @@ export default function ContactForm({ agentId }: { agentId: string }) {
 
       <FormInput label="სასურველი მდებარეობა" name="location" placeholder="მაგ: ვაკე, საბურთალო..." value={formData.location} onChange={handleChange} />
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <FormSelect
           label="გარიგება" name="category" value={formData.category} onChange={handleChange}
           options={[{ label: "ყიდვა", value: "Buy" }, { label: "ქირაობა", value: "Rent" }]}
@@ -68,6 +75,11 @@ export default function ContactForm({ agentId }: { agentId: string }) {
         <FormSelect
           label="ტიპი" name="propertyType" value={formData.propertyType} onChange={handleChange}
           options={[{ label: "ბინა", value: "Apartment" }, { label: "სახლი", value: "House" }]}
+        />
+        {/* სართულის არჩევანი */}
+        <FormSelect
+          label="სართული" name="floor" value={formData.floor} onChange={handleChange}
+          options={floorOptions}
         />
       </div>
 
