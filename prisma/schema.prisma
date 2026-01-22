@@ -100,6 +100,7 @@ model Buyer {
   minRooms     Int      @default(1)
   minBaths     Int      @default(1)
   budget       Float      // მაქსიმალური ბიუჯეტი
+  floor Int      @default(1) // სასურველი სართული (თუ ბინაა)
 
   // დამატებითი პირობები
   preferredCondition String @default("Any") // New, Old, Any

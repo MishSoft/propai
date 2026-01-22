@@ -5,9 +5,22 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     const { id: agentId } = await params;
     const body = await req.json();
-    const { name, phone, location, category, propertyType, budget, description } = body;
 
-    // 1. Buyer-ის შექმნა (ეს ხომ მუშაობს)
+    // 1. აქ დაამატე floor, minRooms და minBaths-ის ამოღება body-დან
+    const {
+      name,
+      phone,
+      location,
+      category,
+      propertyType,
+      budget,
+      description,
+      floor,      // <--- დაემატა
+      minRooms,   // <--- დაემატა (რომ ესენიც არ იყოს სულ default)
+      minBaths    // <--- დაემატა
+    } = body;
+
+    // 2. Buyer-ის შექმნა
     const newBuyer = await db.buyer.create({
       data: {
         name,
@@ -18,13 +31,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         budget: Number(budget) || 0,
         description: description || "",
         authorId: agentId,
+        // ახლა უკვე ვიყენებთ ფორმიდან მოსულ მნიშვნელობას
+        floor: parseInt(floor) || 1,
+        minRooms: Number(minRooms) || 1,
+        minBaths: Number(minBaths) || 1,
       },
     });
 
-    // 2. დიაგნოსტიკა: ვნახოთ რას ხედავს DB ობიექტი
-    console.log("Available models in DB:", Object.keys(db));
-
-    // 3. უსაფრთხო ჩაწერა - მივმართოთ დინამიურად
+    // 3. შეტყობინების შექმნა (იგივე რჩება)
     const modelName = 'notification';
     if (modelName in db) {
       await (db as any)[modelName].create({
@@ -35,8 +49,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           buyerId: newBuyer.id,
         }
       });
-    } else {
-      console.error("❌ Notification model still not found in Prisma Client!");
     }
 
     return NextResponse.json({ success: true, newBuyer });
