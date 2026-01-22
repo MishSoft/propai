@@ -4,6 +4,12 @@ import ListingItem from "@/app/(main)/listings/components/ListingItem/ListingIte
 import { FaUserTie, FaWhatsapp, FaViber, FaPhone } from "react-icons/fa6";
 import Link from "next/link";
 import { FaArrowLeft } from "react-icons/fa";
+import { Post, User } from "@prisma/client";
+
+// 1. Prisma-ს ტიპი, როგორც ბაზიდან მოდის
+type PrismaPostWithAuthor = Post & {
+  author: User;
+};
 
 export default async function AgentPortfolioPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -11,7 +17,10 @@ export default async function AgentPortfolioPage({ params }: { params: Promise<{
   const agent = await prisma.user.findUnique({
     where: { id: id },
     include: {
-      posts: { orderBy: { createdAt: 'desc' } }
+      posts: {
+        orderBy: { createdAt: 'desc' },
+        include: { author: true }
+      }
     },
   });
 
@@ -21,19 +30,18 @@ export default async function AgentPortfolioPage({ params }: { params: Promise<{
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ზედა მინი-ნავიგაცია */}
+      {/* ნავიგაცია */}
       <nav className="h-16 border-b border-slate-50 px-8 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-50">
         <Link href="/listings" className="text-slate-400 hover:text-slate-900 transition-all">
           <FaArrowLeft size={14} />
         </Link>
         <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Agent Portfolio</span>
-        <div className="w-4" /> {/* ბალანსისთვის */}
+        <div className="w-4" />
       </nav>
 
-      {/* კომპაქტური ჰედერი */}
-      <header className="py-10  px-8 border-b border-slate-50">
+      {/* ჰედერი */}
+      <header className="py-10 px-8 border-b border-slate-50">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-slate-200 shrink-0">
               <FaUserTie size={32} />
@@ -45,25 +53,13 @@ export default async function AgentPortfolioPage({ params }: { params: Promise<{
           </div>
 
           <div className="flex flex-wrap justify-center gap-3">
-            {/* ტელეფონი */}
             <a href={`tel:${formattedPhone}`} className="flex items-center gap-2 px-5 py-3 bg-slate-50 hover:bg-slate-100 rounded-2xl text-slate-700 text-xs font-bold transition-all border border-slate-100">
               <FaPhone size={12} className="text-slate-400" /> {agent.phone}
             </a>
-
-            {/* WhatsApp */}
-            <a
-              href={`https://wa.me/${formattedPhone}`}
-              target="_blank"
-              className="flex items-center gap-2 px-5 py-3 bg-emerald-50 hover:bg-emerald-100 rounded-2xl text-emerald-700 text-xs font-bold transition-all border border-emerald-100"
-            >
+            <a href={`https://wa.me/${formattedPhone}`} target="_blank" className="flex items-center gap-2 px-5 py-3 bg-emerald-50 hover:bg-emerald-100 rounded-2xl text-emerald-700 text-xs font-bold transition-all border border-emerald-100">
               <FaWhatsapp size={16} /> WhatsApp
             </a>
-
-            {/* Viber - იყენებს viber://chat?number პროტოკოლს */}
-            <a
-              href={`viber://chat?number=%2B${formattedPhone.replace('+', '')}`}
-              className="flex items-center gap-2 px-5 py-3 bg-indigo-50 hover:bg-indigo-100 rounded-2xl text-indigo-700 text-xs font-bold transition-all border border-indigo-100"
-            >
+            <a href={`viber://chat?number=%2B${formattedPhone.replace('+', '')}`} className="flex items-center gap-2 px-5 py-3 bg-indigo-50 hover:bg-indigo-100 rounded-2xl text-indigo-700 text-xs font-bold transition-all border border-indigo-100">
               <FaViber size={16} /> Viber
             </a>
           </div>
@@ -78,13 +74,30 @@ export default async function AgentPortfolioPage({ params }: { params: Promise<{
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {agent.posts.map((post) => (
-            <ListingItem
-              key={post.id}
-              item={post as any}
-              isPublic={true}
-            />
-          ))}
+          {agent.posts.map((post) => {
+            const rawPost = post as PrismaPostWithAuthor;
+
+            // მონაცემების ზუსტი გარდაქმნა (Mapping)
+            const formattedItem = {
+              ...rawPost,
+              createdAt: rawPost.createdAt.toISOString(),
+              updatedAt: rawPost.updatedAt.toISOString(),
+              author: {
+                fullName: rawPost.author.name || "უცნობი აგენტი", // name -> fullName
+                phone: rawPost.author.phone || "", // string | null -> string
+                image: rawPost.author.image || undefined,
+                role: rawPost.author.role,
+              }
+            };
+
+            return (
+              <ListingItem
+                key={formattedItem.id}
+                item={formattedItem as any} // აქ any-ს ნაცვლად ახლა უკვე შეგვიძლია მივუთითოთ რეალური ტიპი, მაგრამ formattedItem უკვე სრულად ემთხვევა სტრუქტურას
+                isPublic={true}
+              />
+            );
+          })}
         </div>
       </main>
     </div>
