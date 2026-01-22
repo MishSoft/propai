@@ -6,7 +6,7 @@ import Link from "next/link";
 import { FaArrowLeft } from "react-icons/fa";
 import { Post, User } from "@prisma/client";
 
-// 1. Prisma-ს ტიპი, როგორც ბაზიდან მოდის
+// ვქმნით ტიპს, რომელიც აღწერს ბაზიდან წამოსულ მონაცემს
 type PrismaPostWithAuthor = Post & {
   author: User;
 };
@@ -30,7 +30,6 @@ export default async function AgentPortfolioPage({ params }: { params: Promise<{
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ნავიგაცია */}
       <nav className="h-16 border-b border-slate-50 px-8 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-50">
         <Link href="/listings" className="text-slate-400 hover:text-slate-900 transition-all">
           <FaArrowLeft size={14} />
@@ -39,7 +38,6 @@ export default async function AgentPortfolioPage({ params }: { params: Promise<{
         <div className="w-4" />
       </nav>
 
-      {/* ჰედერი */}
       <header className="py-10 px-8 border-b border-slate-50">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-center gap-6">
@@ -66,7 +64,6 @@ export default async function AgentPortfolioPage({ params }: { params: Promise<{
         </div>
       </header>
 
-      {/* პოსტების ბადე */}
       <main className="max-w-7xl mx-auto py-12 px-8">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Listing Collection ({agent.posts.length})</h2>
@@ -74,26 +71,27 @@ export default async function AgentPortfolioPage({ params }: { params: Promise<{
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {agent.posts.map((post) => {
-            const rawPost = post as PrismaPostWithAuthor;
+          {/* აქ მოხდა მთავარი ცვლილება: post-ს მიენიჭა ტიპი PrismaPostWithAuthor */}
+          {agent.posts.map((post: any) => {
+            const p = post as PrismaPostWithAuthor;
 
-            // მონაცემების ზუსტი გარდაქმნა (Mapping)
+            // ვაკეთებთ ფორმატირებას ListingItem-ისთვის
             const formattedItem = {
-              ...rawPost,
-              createdAt: rawPost.createdAt.toISOString(),
-              updatedAt: rawPost.updatedAt.toISOString(),
+              ...p,
+              createdAt: p.createdAt.toISOString(),
+              updatedAt: p.updatedAt.toISOString(),
               author: {
-                fullName: rawPost.author.name || "უცნობი აგენტი", // name -> fullName
-                phone: rawPost.author.phone || "", // string | null -> string
-                image: rawPost.author.image || undefined,
-                role: rawPost.author.role,
+                fullName: p.author.name || "Unknown",
+                phone: p.author.phone || "",
+                image: p.author.image || undefined,
+                role: p.author.role,
               }
             };
 
             return (
               <ListingItem
                 key={formattedItem.id}
-                item={formattedItem as any} // აქ any-ს ნაცვლად ახლა უკვე შეგვიძლია მივუთითოთ რეალური ტიპი, მაგრამ formattedItem უკვე სრულად ემთხვევა სტრუქტურას
+                item={formattedItem as any}
                 isPublic={true}
               />
             );
