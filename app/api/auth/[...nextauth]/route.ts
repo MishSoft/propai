@@ -1,58 +1,58 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import FacebookProvider from "next-auth/providers/facebook";
+import CredentialsProvider from "next-auth/providers/credentials"; // დაამატე ეს
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import db from "@/lib/db";
+import bcrypt from "bcrypt";
 
 const handler = NextAuth({
   adapter: PrismaAdapter(db),
   secret: process.env.NEXTAUTH_SECRET,
+  session: { strategy: "jwt" },
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
     }),
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID!,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
-    }),
+    // დაამატე CredentialsProvider ხელით რეგისტრაციისთვის
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Invalid credentials");
+        }
+
+        const user = await db.user.findUnique({
+          where: { email: credentials.email }
+        });
+
+        if (!user || !user.password) {
+          throw new Error("User not found or social account");
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
+
+        if (!isPasswordCorrect) {
+          throw new Error("Invalid password");
+        }
+
+        return user; // NextAuth თავად დაშიფრავს ამ იუზერს ტოკენში
+      }
+    })
   ],
-  pages: {
-    signIn: '/login',
-    error: '/login',
-  },
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 დღე
-  },
   callbacks: {
     async jwt({ token, user }) {
-      // 1. პირველი ლოგინის დროს user ობიექტი მოყვება
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.plan = user.plan;
       }
-
-      // 2. თუ ტოკენში ინფორმაცია აკლია (მაგ. გვერდის დარეფრეშებისას), ამოვიღოთ ბაზიდან
-      if (!token.role || !token.plan) {
-        const dbUser = await db.user.findUnique({
-          where: { email: token.email! },
-          select: { id: true, role: true, plan: true }
-        });
-
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.role = dbUser.role;
-          token.plan = dbUser.plan;
-        }
-      }
-
       return token;
     },
-
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id;
@@ -62,18 +62,20 @@ const handler = NextAuth({
       return session;
     },
   },
+  // დატოვე Cookies-ის ეს კონფიგურაცია Vercel-ისთვის
   cookies: {
     sessionToken: {
-      name: `next-auth.session-token`,
+      name: process.env.NODE_ENV === "production"
+        ? "__Secure-next-auth.session-token"
+        : "next-auth.session-token",
       options: {
         httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === "production"
-      }
-    }
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
   },
-  debug: process.env.NODE_ENV === "development",
 });
 
 export { handler as GET, handler as POST };

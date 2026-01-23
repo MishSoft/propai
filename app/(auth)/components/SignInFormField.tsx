@@ -7,6 +7,7 @@ import ForgetPassword from './ForgetPassword';
 import Separator from './Separator';
 import AuthWith from './AuthWith';
 import SignInBtn from './SignInBtn';
+import { signIn } from 'next-auth/react';
 
 export default function SignInFormField() {
   const router = useRouter();
@@ -35,23 +36,23 @@ export default function SignInFormField() {
     setError("");
 
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(inputFields)
+      // ნაცვლად fetch-ისა, ვიყენებთ NextAuth-ის signIn ფუნქციას
+      const result = await signIn("credentials", {
+        redirect: false, // false, რომ შეცდომა ხელით დავიჭიროთ აქ
+        email: inputFields.email,
+        password: inputFields.password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Invalid email or password");
+      if (result?.error) {
+        // თუ NextAuth-მა დააბრუნა შეცდომა (მაგ. არასწორი პაროლი)
+        setError("Invalid email or password");
+      } else {
+        // წარმატების შემთხვევაში გადავდივართ მთავარ გვერდზე
+        window.location.href = '/';
       }
 
-      // router.push('/')-ის ნაცვლად გამოიყენე ეს:
-      window.location.href = '/';
-
     } catch (err: any) {
-      setError(err.message);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
