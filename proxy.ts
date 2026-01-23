@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
+import createIntlMiddleware from 'next-intl/middleware'
+import { locales } from './i18n' // დარწმუნდი, რომ აქედან აექსპორტებ locales-ს
+
+// 1. ინიციალიზაცია ენების middleware-ისთვის
+const intlMiddleware = createIntlMiddleware({
+  locales,
+  defaultLocale: 'en',
+  localePrefix: 'always'
+});
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -14,37 +23,39 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. საჯარო გვერდები - აქ დავამატოთ შემოწმება
-  const isPublicPage =
-    pathname.startsWith('/agent') ||
-    pathname.startsWith('/listings') ||
-    pathname === '/login' ||
-    pathname === '/register';
+  // 2. ჯერ გავატაროთ ენების ფილტრში
+  // ეს დაამატებს /en/ ან /ka/-ს თუ აკლია URL-ს
+  const response = intlMiddleware(request);
 
-  if (isPublicPage) {
-    return NextResponse.next();
-  }
+  // 3. საჯარო გვერდების შემოწმება (Regex-ით, რადგან ახლა ენის პრეფიქსები გვაქვს)
+  // ეს ამოწმებს მაგალითად: /en/login, /ka/agent, /ru/listings და ა.შ.
+  const isPublicPage = /\/(ka|en|ru)\/(login|register|agent|listings)/.test(pathname) ||
+                       pathname === '/login' ||
+                       pathname === '/register';
 
-  // 3. დაცული გვერდების შემოწმება
-  // getToken-ს ვამატებთ პარამეტრებს, რომ Vercel-ზე არ "დაიბნეს"
+  // 4. დაცული გვერდების შემოწმება (Session)
   const session = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
-    // აი ეს ხაზი დაამატე აუცილებლად:
     secureCookie: process.env.NODE_ENV === "production",
   });
 
-  // თუ მთავარ გვერდზე ხარ და სესია არ გაქვს -> Login
-  if (pathname === '/' && !session) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  // 5. მიმდინარე ენის ამოღება URL-იდან გადამისამართებისთვის
+  const locale = pathname.split('/')[1] || 'en';
+
+  // ლოგიკა: თუ არაა საჯარო და არ აქვს სესია -> Redirect ლოგინზე
+  if (!isPublicPage && !session) {
+    const loginUrl = new URL(`/${locale}/login`, request.url);
+    return NextResponse.redirect(loginUrl);
   }
 
-  // თუ დალოგინებული ხარ და ცდილობ /login-ზე შესვლას -> Dashboard
-  if (pathname === '/login' && session) {
-    return NextResponse.redirect(new URL('/', request.url));
+  // ლოგიკა: თუ დალოგინებულია და ცდილობს შესვლას login/register-ზე -> Dashboard
+  if (session && (pathname.includes('/login') || pathname.includes('/register'))) {
+    return NextResponse.redirect(new URL(`/${locale}`, request.url));
   }
 
-  return NextResponse.next();
+  // თუ ყველაფერი რიგზეა, ვაბრუნებთ intlMiddleware-ის მიერ მომზადებულ რესპონსს
+  return response;
 }
 
 export const config = {

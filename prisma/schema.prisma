@@ -28,6 +28,7 @@ model User {
   posts         Post[]
   buyers        Buyer[]
   notifications Notification[]
+  aiTone String? @default("professional") // AI ტონის ველი
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
