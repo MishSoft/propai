@@ -12,6 +12,7 @@ export interface ListingType {
   sqft: number;
   description: string;
   createdAt?: string;
+  category: string;
 
   // დაამატე ეს ორი ველი აუცილებლად:
   authorId: string;
@@ -51,6 +52,7 @@ export const useUiStore = create<useUiStoreProps>((set) => ({
       sqft: 85,
       images: ["/house1.jpg"],
       description: "ლამაზი ბინა ვაკეში...",
+      category: "Sale",
       authorId: "agent_123",
       author: {
         fullName: "Agent Name",

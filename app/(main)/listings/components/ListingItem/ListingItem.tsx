@@ -8,7 +8,6 @@ import ListingCardMedia from './ListingCardMedia';
 import ListingCardStats from './ListingCardStats';
 import { useRouter } from 'next/navigation';
 
-// დავამატეთ isPublic? პროპსი
 export default function ListingItem({ item, isPublic = false }: { item: ListingType, isPublic?: boolean }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const openDetails = useUiStore((state) => state.openDetailsModal);
@@ -34,12 +33,12 @@ export default function ListingItem({ item, isPublic = false }: { item: ListingT
     <article className={`group w-full bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-300 flex flex-col ${isDeleting ? 'opacity-50 grayscale' : ''}`}>
 
       <ListingCardMedia
+      category={item.category}
         images={item.images}
         street={item.street}
-        // თუ საჯაროა, onDelete ფუნქცია არ გადაეცემა, შესაბამისად ღილაკი არ გამოჩნდება
         onDelete={!isPublic ? handleDelete : () => { }}
         isDeleting={isDeleting}
-        showDelete={!isPublic} // ListingCardMedia-შიც დაგვჭირდება ამის გათვალისწინება
+        showDelete={!isPublic}
       />
 
       <div className='p-6 flex flex-col flex-1'>

@@ -1,7 +1,17 @@
+"use client"
+import { useUiStore } from '@/store/useUiStore';
+import { useRouter } from 'next/navigation';
 import React from 'react'
 import { FaBuildingUser } from "react-icons/fa6";
 
 export default function ListingCard() {
+  const {toggleListingModal} = useUiStore()
+  const router = useRouter()
+  const handleListingClick = () => {
+    toggleListingModal();
+    router.push('/listings');
+  }
+
   return (
     <div className='p-6 flex flex-col w-full xl:w-auto items-start gap-6 border border-gray-100 rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow duration-300 xl:max-w-sm'>
 
@@ -16,7 +26,7 @@ export default function ListingCard() {
         </p>
       </div>
 
-      <button className='w-full py-3 px-4 font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors duration-200 shadow-sm active:scale-[0.98]'>
+      <button onClick={handleListingClick} className='w-full py-3 px-4 font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors duration-200 shadow-sm active:scale-[0.98]'>
         Create Listing
       </button>
 

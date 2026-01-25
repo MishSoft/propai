@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
+/** @type {import('next').NextConfig} */
 const nextConfig: NextConfig = {
-  /* config options here */
   reactCompiler: true,
   images: {
     remotePatterns: [
@@ -13,11 +13,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'lh3.googleusercontent.com', // Google-ის სურათებისთვის
+        hostname: 'lh3.googleusercontent.com',
       },
       {
         protocol: 'https',
-        hostname: 'platform-lookaside.fbsbx.com', // Facebook-ის სურათებისთვის (თუ დაგჭირდა)
+        hostname: 'platform-lookaside.fbsbx.com',
       },
     ],
   },

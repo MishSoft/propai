@@ -36,6 +36,10 @@ export default function BuyersPage() {
     setIsModalOpen(true);
   };
 
+  const handleDeleteBuyer = (id: string) => {
+    setBuyers((prev) => prev.filter((b) => b.id !== id));
+  };
+
   return (
     <section className="max-w-6xl mx-auto p-6">
       <header className="flex justify-between items-center mb-8">
@@ -56,6 +60,7 @@ export default function BuyersPage() {
         <BuyerList
           buyers={buyers}
           onViewDetails={handleViewDetails}
+          onDelete={handleDeleteBuyer}
         />
       )}
 
@@ -64,6 +69,7 @@ export default function BuyersPage() {
         buyer={selectedBuyer}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+
       />
     </section>
   );

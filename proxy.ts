@@ -1,63 +1,52 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
-import createIntlMiddleware from 'next-intl/middleware'
-import { locales } from './i18n' // დარწმუნდი, რომ აქედან აექსპორტებ locales-ს
 
-// 1. ინიციალიზაცია ენების middleware-ისთვის
-const intlMiddleware = createIntlMiddleware({
-  locales,
-  defaultLocale: 'en',
-  localePrefix: 'always'
-});
+// საჯარო გვერდების სია (ენის პრეფიქსის გარეშე)
+const PUBLIC_ROUTES = ['/login', '/register', '/agent', '/listings']
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname } = request.nextUrl
 
-  // 1. გამოვრიცხოთ ყველა ფაილი და API
+  // 1. გამოვტოვოთ სტატიკური ფაილები და API
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname.includes('.')
   ) {
-    return NextResponse.next();
+    return NextResponse.next()
   }
 
-  // 2. ჯერ გავატაროთ ენების ფილტრში
-  // ეს დაამატებს /en/ ან /ka/-ს თუ აკლია URL-ს
-  const response = intlMiddleware(request);
-
-  // 3. საჯარო გვერდების შემოწმება (Regex-ით, რადგან ახლა ენის პრეფიქსები გვაქვს)
-  // ეს ამოწმებს მაგალითად: /en/login, /ka/agent, /ru/listings და ა.შ.
-  const isPublicPage = /\/(ka|en|ru)\/(login|register|agent|listings)/.test(pathname) ||
-                       pathname === '/login' ||
-                       pathname === '/register';
-
-  // 4. დაცული გვერდების შემოწმება (Session)
+  // 2. სესიის შემოწმება
   const session = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
-    secureCookie: process.env.NODE_ENV === "production",
-  });
+  })
 
-  // 5. მიმდინარე ენის ამოღება URL-იდან გადამისამართებისთვის
-  const locale = pathname.split('/')[1] || 'en';
+  // 3. საჯარო გვერდის შემოწმება
+  const isPublicPage = PUBLIC_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  )
 
-  // ლოგიკა: თუ არაა საჯარო და არ აქვს სესია -> Redirect ლოგინზე
+  // 4. გადამისამართების ლოგიკა (Redirect Logic)
+
+  // თუ არაა საჯარო გვერდი და იუზერი არაა დალოგინებული -> Login
   if (!isPublicPage && !session) {
-    const loginUrl = new URL(`/${locale}/login`, request.url);
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // ლოგიკა: თუ დალოგინებულია და ცდილობს შესვლას login/register-ზე -> Dashboard
-  if (session && (pathname.includes('/login') || pathname.includes('/register'))) {
-    return NextResponse.redirect(new URL(`/${locale}`, request.url));
+  // თუ დალოგინებულია და ცდილობს შესვლას login/register-ზე -> Home (/)
+  if (session && (pathname === '/login' || pathname === '/register')) {
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
-  // თუ ყველაფერი რიგზეა, ვაბრუნებთ intlMiddleware-ის მიერ მომზადებულ რესპონსს
-  return response;
+  return NextResponse.next()
+}
+
+export async function middleware(request: NextRequest) {
+  return proxy(request)
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!api|_next|favicon.ico).*)'],
 }

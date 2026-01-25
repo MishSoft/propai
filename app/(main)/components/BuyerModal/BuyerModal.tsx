@@ -45,7 +45,7 @@ export const BuyerModal: React.FC<BuyerModalProps> = ({ buyer, isOpen, onClose }
 
           <div className="mt-4">
             <span className="px-3 py-1 bg-white/20 rounded-lg text-xs font-bold uppercase tracking-widest">
-              {buyer.category === 'Sale' ? 'ყიდვა' : 'ქირა'}
+              {buyer.category === 'Buy' ? 'ყიდვა' : 'ქირა'}
             </span>
             <h2 className="text-3xl font-black mt-2 leading-none">{buyer.name}</h2>
             <div className="flex items-center gap-4 mt-3 opacity-90">

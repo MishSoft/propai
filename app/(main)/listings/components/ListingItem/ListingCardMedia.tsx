@@ -6,6 +6,7 @@ import { FaChevronLeft, FaChevronRight, FaTrashCan } from "react-icons/fa6";
 interface Props {
   images: string[];
   street: string;
+  category: string; // <-- დავამატეთ ეს
   onDelete: (e: React.MouseEvent) => void;
   isDeleting: boolean;
   showDelete: boolean;
@@ -14,6 +15,7 @@ interface Props {
 export default function ListingCardMedia({
   images,
   street,
+  category, // <-- მივიღოთ პროპსებიდან
   onDelete,
   isDeleting,
   showDelete
@@ -29,6 +31,8 @@ export default function ListingCardMedia({
     e.stopPropagation();
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
+
+  const label = (category === "Buy" || category === "Sale") ? "For Sale" : "For Rent";
 
   return (
     <div className='relative h-64 overflow-hidden bg-slate-100 shrink-0'>
@@ -67,9 +71,9 @@ export default function ListingCardMedia({
         </>
       )}
 
-      {/* Status Badge */}
+      {/* დინამიკური Label */}
       <div className='absolute top-4 left-4 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-[10px] font-black text-white uppercase tracking-widest z-10'>
-        For Sale
+        {label}
       </div>
     </div>
   );

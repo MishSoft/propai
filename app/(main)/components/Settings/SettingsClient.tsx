@@ -8,8 +8,6 @@ import ProfileSection from './ProfileSection'
 import SecuritySection from './SecuritySection'
 import AISettings from './AISettings'
 import BillingSection from './BillingSection'
-import AppearanceSection from './AppearanceSection'
-import LanguageSection from './LanguageSection'
 
 interface SettingsClientProps {
   user?: UserSettings; // გავხადოთ optional უსაფრთხოებისთვის
@@ -21,7 +19,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
   // თუ იუზერი არ არის, ვაჩვენებთ ლოუდერს, რომ არაფერმა დააეროროს
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-100">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
       </div>
     );
@@ -32,7 +30,6 @@ export default function SettingsClient({ user }: SettingsClientProps) {
     { id: "security", label: "Security", icon: <FaLock /> },
     { id: "ai", label: "AI Preferences", icon: <FaRobot /> },
     { id: "billing", label: "Billing", icon: <FaCreditCard /> },
-    { id: "general", label: "General", icon: <FaCog /> },
   ] as const;
 
   return (
@@ -53,20 +50,12 @@ export default function SettingsClient({ user }: SettingsClientProps) {
         ))}
       </aside>
 
-      <main className="flex-1 min-h-[500px]">
+      <main className="flex-1 min-h-125">
         <div className="animate-in fade-in slide-in-from-right-4 duration-300">
           {activeTab === "profile" && <ProfileSection user={user} />}
           {activeTab === "security" && <SecuritySection />}
           {activeTab === "ai" && <AISettings />}
-          {/* უსაფრთხო გადაწოდება ?. ოპერატორით */}
           {activeTab === "billing" && <BillingSection plan={user?.plan ?? "free"} />}
-
-          {activeTab === "general" && (
-            <div className="flex flex-col gap-6">
-              <AppearanceSection />
-              <LanguageSection />
-            </div>
-          )}
         </div>
       </main>
     </div>

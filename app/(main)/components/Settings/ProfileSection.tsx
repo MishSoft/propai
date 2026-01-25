@@ -7,19 +7,16 @@ interface ProfileSectionProps {
 }
 
 export default function ProfileSection({ user }: ProfileSectionProps) {
-  // საწყისი მნიშვნელობა ყოველთვის ცარიელი სტრინგია, რომ არ დაქრაშოს
   const [name, setName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
 
-  // მონაცემების სინქრონიზაცია ხდება მას შემდეგ, რაც კომპონენტი "დაჯდება"
   useEffect(() => {
     if (user?.name) {
       setName(user.name);
     }
   }, [user]);
 
-  // თუ იუზერი არ არსებობს, ვაჩვენებთ ლოუდერს და არ მივდივართ დაბლა კოდზე
   if (!user) {
     return <div className="p-6 text-slate-500 animate-pulse">Loading profile...</div>;
   }
@@ -48,32 +45,46 @@ export default function ProfileSection({ user }: ProfileSectionProps) {
 
   return (
     <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-      <h3 className="text-lg font-bold text-slate-800 mb-6 tracking-tight">Personal Information</h3>
+      <h3 className="text-lg font-bold text-slate-800 mb-6 tracking-tight">
+        Profile Settings
+      </h3>
+
       {status && (
-        <div className={`mb-6 p-4 rounded-xl text-sm font-semibold border ${status.type === 'success' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'
+        <div className={`mb-6 p-4 rounded-xl text-sm font-semibold border ${status.type === 'success'
+          ? 'bg-green-50 text-green-700 border-green-100'
+          : 'bg-red-50 text-red-700 border-red-100'
           }`}>
           {status.msg}
         </div>
       )}
+
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Full Name</label>
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+            Full Name
+          </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="p-3 rounded-xl border border-slate-200 outline-none focus:border-purple-500 transition-all text-sm font-medium"
+            placeholder="Enter your name"
           />
         </div>
+
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Email Address</label>
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+            Email Address
+          </label>
           <input
             type="email"
             disabled
             value={user.email ?? ""}
             className="p-3 rounded-xl border border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed text-sm font-medium"
           />
+          <p className="text-[10px] text-slate-400 px-1">Email cannot be changed</p>
         </div>
+
         <button
           onClick={handleUpdate}
           disabled={loading || !name || name === user.name}

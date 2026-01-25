@@ -24,7 +24,6 @@ export default async function Page() {
       <Header agentId={agentId} />
       <Hero />
       <div className='flex w-full flex-col xl:flex-row justify-between gap-2 items-start'>
-        {/* გადავაწოდოთ მონაცემები კომპონენტს */}
         <Activity data={recentListings} />
         <QuickAction />
       </div>
