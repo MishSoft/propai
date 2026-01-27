@@ -69,7 +69,7 @@ model Post {
   description String   @db.Text
   city        String
   street      String
-  price       Float
+  price       BigInt
 
   // ძირითადი მახასიათებლები
   beds        Int      @default(0)

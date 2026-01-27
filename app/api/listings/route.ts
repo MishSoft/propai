@@ -3,23 +3,33 @@ import db from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+// 1. BigInt სერიალიზაციის გლობალური ფიქსი (მნიშვნელოვანია!)
+(BigInt.prototype as any).toJSON = function () {
+  return Number(this);
+};
+
+interface CustomUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  plan?: string;
+}
+
 export async function POST(req: Request) {
   try {
-    // 1. ავტორიზაციის შემოწმება
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user) {
       return NextResponse.json({ error: "ავტორიზაცია საჭიროა" }, { status: 401 });
     }
 
-    // @ts-ignore
-    const userId = session.user.id;
-    // @ts-ignore
-    const userPlan = (session.user.plan || "lite").toLowerCase();
+    const user = session.user as CustomUser;
+    const userId = user.id;
+    const userPlan = (user.plan || "lite").toLowerCase();
 
     const body = await req.json();
 
-    // 2. ლიმიტების შემოწმება
     const planLimits: Record<string, number> = {
       lite: 5,
       agent: 20,
@@ -39,7 +49,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3. მონაცემების ამოღება და გარდაქმნა
     const {
       city,
       street,
@@ -49,20 +58,19 @@ export async function POST(req: Request) {
       sqft,
       description,
       images,
-      category,      // 🔥 ახალი: Sale ან Rent
-      propertyType,  // 🔥 ახალი: Apartment ან House
-      condition,     // 🔥 ახალი: New ან Old
-      floor          // 🔥 ახალი: სართული
+      category,
+      propertyType,
+      condition,
+      floor
     } = body;
 
-    // უსაფრთხო გარდაქმნა რიცხვებად
-    const safePrice = parseInt(price) || 0;
-    const safeBeds = parseInt(rooms) || 0;
-    const safeBaths = parseInt(baths) || 0;
-    const safeSqft = parseInt(sqft) || 0;
-    const safeFloor = parseInt(floor) || 1;
+    // უსაფრთხო გარდაქმნა და დამრგვალება (რომ 899999 არ ჩაიწეროს)
+    const safePrice = Math.round(Number(price)) || 0;
+    const safeBeds = Number(rooms) || 0;
+    const safeBaths = Number(baths) || 0;
+    const safeSqft = Number(sqft) || 0;
+    const safeFloor = Number(floor) || 1;
 
-    // 4. პოსტის შექმნა განახლებულ ბაზაში
     const newPost = await db.post.create({
       data: {
         title: street || "No Title",
@@ -72,10 +80,10 @@ export async function POST(req: Request) {
         beds: safeBeds,
         baths: safeBaths,
         sqft: safeSqft,
-        floor: safeFloor,              // 🔥
-        category: category || "Sale",   // 🔥
-        propertyType: propertyType || "Apartment", // 🔥
-        condition: condition || "New",  // 🔥
+        floor: safeFloor,
+        category: category || "Sale",
+        propertyType: propertyType || "Apartment",
+        condition: condition || "New",
         description: description || "",
         images: images || [],
         author: {
@@ -94,12 +102,14 @@ export async function POST(req: Request) {
       }
     });
 
+    // BigInt პატჩის წყალობით, აქ ერორი აღარ მოხდება
     return NextResponse.json(newPost, { status: 201 });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("Listing POST Error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "სერვერის შეცდომა: " + (error.message || "Unknown error") },
+      { error: "სერვერის შეცდომა: " + errorMessage },
       { status: 500 }
     );
   }
@@ -120,9 +130,20 @@ export async function GET() {
         }
       }
     });
-    return NextResponse.json(listings);
-  } catch (error: any) {
+
+    // BigInt პატჩი აქაც ავტომატურად იმუშავებს,
+    // მაგრამ ფასის Number-ად გარდაქმნა მაინც კარგი პრაქტიკაა frontend-ისთვის
+    const safeListings = listings.map(l => ({
+      ...l,
+      price: Number(l.price)
+    }));
+
+    return NextResponse.json(safeListings);
+  } catch (error) {
     console.error("GET Error:", error);
-    return NextResponse.json({ error: "განცხადებების წამოღება ვერ მოხერხდა" }, { status: 500 });
+    return NextResponse.json(
+      { error: "განცხადებების წამოღება ვერ მოხერხდა" },
+      { status: 500 }
+    );
   }
 }

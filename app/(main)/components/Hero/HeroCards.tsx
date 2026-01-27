@@ -5,11 +5,12 @@ import { FaArrowTrendUp, FaArrowTrendDown } from "react-icons/fa6";
 interface HeroCardsProps {
   title: string;
   icon: IconType;
-  number: string | number; // სტატისტიკისთვის ხშირად string-იც გვჭირდება (მაგ: $2.4k)
+  number?: string | number;
   increment: string;
+  priceValue?: number | string
 }
 
-export default function HeroCards({ title, icon: Icon, number, increment }: HeroCardsProps) {
+export default function HeroCards({ title, icon: Icon, number, increment = "0", priceValue }: HeroCardsProps) {
   const isNegative = increment.startsWith("-");
 
   return (
@@ -26,7 +27,7 @@ export default function HeroCards({ title, icon: Icon, number, increment }: Hero
 
       <div className='flex flex-col gap-1'>
         <h2 className='text-3xl font-bold text-gray-900 tracking-tight'>
-          {number}
+          {priceValue ?? number ?? 0}
         </h2>
 
         <div className={`flex items-center gap-1.5 text-sm font-medium ${isNegative ? "text-rose-500" : "text-emerald-500"}`}>

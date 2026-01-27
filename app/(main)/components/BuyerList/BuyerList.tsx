@@ -5,15 +5,14 @@ import { Buyer } from '@/types/buyer';
 interface BuyerListProps {
   buyers: Buyer[];
   onViewDetails: (buyer: Buyer) => void;
-  // 1. დავამატეთ onDelete ინტერფეისში
   onDelete: (id: string) => void;
 }
 
-// 2. მივიღეთ onDelete პროპსებიდან
 export const BuyerList: React.FC<BuyerListProps> = ({ buyers, onViewDetails, onDelete }) => {
   if (buyers.length === 0) {
     return (
-      <div className="bg-white border border-dashed border-gray-200 rounded-3xl p-24 text-center">
+      /* p-24 შევცვალეთ px-6 py-12-ით, რომ მობილურზე დაეტიოს */
+      <div className="bg-white border border-dashed border-gray-200 rounded-3xl px-6 py-12 sm:py-24 text-center w-full">
         <div className="max-w-xs mx-auto">
           <p className="text-gray-400 font-medium">კლიენტების სია ცარიელია</p>
           <p className="text-gray-300 text-sm mt-1">ახალი მოთხოვნები აქ გამოჩნდება</p>
@@ -23,13 +22,13 @@ export const BuyerList: React.FC<BuyerListProps> = ({ buyers, onViewDetails, onD
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    /* შევცვალეთ gap-8 -> gap-4 მობილურზე, gap-6/8 დიდზე. დავამატეთ w-full */
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
       {buyers.map((buyer) => (
         <BuyerCard
           key={buyer.id}
           buyer={buyer}
           onViewDetails={onViewDetails}
-          // 3. გადავაწოდეთ ფუნქცია თითოეულ ბარათს
           onDelete={onDelete}
         />
       ))}

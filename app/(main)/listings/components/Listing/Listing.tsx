@@ -1,11 +1,12 @@
 "use client"
 import React, { useEffect, useRef, useState } from 'react'
 import { useUiStore } from '@/store/useUiStore';
-import { FaTimes, FaMagic, FaMapMarkerAlt, FaTag, FaUserTie, FaPhoneAlt } from "react-icons/fa";
+import { FaTimes, FaMagic, FaMapMarkerAlt, FaTag, FaBuilding } from "react-icons/fa";
 import { MdOutlineBedroomParent, MdOutlineBathtub, MdOutlineSquareFoot } from "react-icons/md";
 import ImageUpload from './ImageUpload';
 import { ListingInput } from './ListingInput';
 import FeatureInput from './FeatureInput';
+import { ListingSelect } from './OptionSection'; // დარწმუნდი რომ ფაილის სახელი სწორია
 
 export default function Listing() {
   const closeModal = useUiStore((state) => state.closeListingModal)
@@ -13,6 +14,9 @@ export default function Listing() {
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
 
+  // 👇 1. დავამატეთ აკლებული სთეითები
+  const [category, setCategory] = useState("buy");
+  const [floor, setFloor] = useState("1");
   const [description, setDescription] = useState("");
   const [selectedLangs, setSelectedLangs] = useState<string[]>(["Georgian"]);
 
@@ -31,6 +35,12 @@ export default function Listing() {
       prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]
     );
   };
+
+  // სართულების ოფციები (1-დან 20-მდე)
+  const floorOptions = Array.from({ length: 20 }, (_, i) => ({
+    label: (i + 1).toString(),
+    value: (i + 1).toString(),
+  }));
 
   const handleAiRewrite = async () => {
     if (!description) return alert("გთხოვთ, ჯერ შეიყვანოთ მოკლე აღწერა");
@@ -59,14 +69,14 @@ export default function Listing() {
     const data = {
       city: getVal('city'),
       street: getVal('street'),
-      price: parseInt(getVal('price')),
+      price: Number(getVal('price')),
       rooms: parseInt(getVal('rooms')),
       baths: parseInt(getVal('baths')),
-      sqft: parseInt(getVal('sqft')),
+      sqft: Number(getVal('sqft')),
       description: description,
       images: selectedImages,
-      agentName: getVal('agentName'),
-      agentPhone: getVal('agentPhone'),
+      floor: parseInt(floor),
+      category: category,
     };
 
     try {
@@ -112,11 +122,33 @@ export default function Listing() {
 
           <ListingInput id="street" label="Street Address" placeholder="Pekini Ave. 15" icon={<FaMapMarkerAlt />} />
 
-          {/* ოთახები, აბაზანა, კვადრატულობა */}
           <div className='grid grid-cols-3 gap-6'>
             <FeatureInput id="rooms" label="Rooms" icon={<MdOutlineBedroomParent size={18} />} />
             <FeatureInput id="baths" label="Baths" icon={<MdOutlineBathtub size={18} />} />
             <FeatureInput id="sqft" label="Sqft" icon={<MdOutlineSquareFoot size={18} />} />
+          </div>
+
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6 w-full'>
+            <ListingSelect
+              label="Category"
+              name="category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              icon={<FaTag />}
+              options={[
+                { label: "Buy", value: "buy" },
+                { label: "Rent", value: "rent" }
+              ]}
+            />
+
+            <ListingSelect
+              label="Floor"
+              name="floor"
+              value={floor}
+              onChange={(e) => setFloor(e.target.value)}
+              icon={<FaBuilding />}
+              options={floorOptions}
+            />
           </div>
 
           {/* AI Description Section */}
@@ -139,7 +171,7 @@ export default function Listing() {
                 type='button'
                 onClick={handleAiRewrite}
                 disabled={aiLoading}
-                className='flex items-center gap-2 px-4 py-2 bg-linear-to-r from-purple-600 to-indigo-600 text-white text-[10px] font-black rounded-xl uppercase tracking-wider hover:shadow-lg disabled:opacity-50'
+                className='flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] font-black rounded-xl uppercase tracking-wider hover:shadow-lg disabled:opacity-50'
               >
                 <FaMagic /> {aiLoading ? 'Processing...' : 'AI Professionalize'}
               </button>
@@ -154,13 +186,7 @@ export default function Listing() {
             />
           </div>
 
-          {/* აგენტის ინფორმაცია */}
-          <div className='pt-8 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6'>
-            <ListingInput id="agentName" label="Agent Name" icon={<FaUserTie />} />
-            <ListingInput id="agentPhone" label="Phone Number" icon={<FaPhoneAlt />} />
-          </div>
-
-          <button type="submit" disabled={loading} className={`w-full py-5 rounded-4xl font-black transition-all ${loading ? 'bg-slate-200 text-slate-400' : 'bg-slate-900 text-white hover:bg-purple-600'} uppercase tracking-widest`}>
+          <button type="submit" disabled={loading} className={`w-full py-5 rounded-[2rem] font-black transition-all ${loading ? 'bg-slate-200 text-slate-400' : 'bg-slate-900 text-white hover:bg-purple-600'} uppercase tracking-widest`}>
             {loading ? 'Processing...' : 'Publish Listing'}
           </button>
         </form>

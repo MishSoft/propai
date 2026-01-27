@@ -30,16 +30,16 @@ export default function StoryGenerator({ listing }: StoryGeneratorProps) {
       {/* გადმოსაწერი ღილაკი */}
       <button
         onClick={downloadStory}
-        className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg hover:scale-105 transition-all active:scale-95 uppercase tracking-widest text-xs cursor-pointer"
+        className="w-full py-4 bg-linear-to-r from-purple-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg hover:scale-105 transition-all active:scale-95 uppercase tracking-widest text-xs cursor-pointer"
       >
         Download Instagram Story
       </button>
 
       {/* თავად Story შაბლონი (ეკრანზე არ ჩანს, რადგან fixed და -left-full აქვს) */}
-      <div className="fixed -left-[9999px] top-0">
+      <div className="fixed -left-2499.75 top-0">
         <div
           ref={storyRef}
-          className="w-[1080px] h-[1920px] bg-slate-900 relative overflow-hidden flex flex-col"
+          className="w-270 h-480 bg-slate-900 relative overflow-hidden flex flex-col"
           style={{ fontFamily: 'sans-serif' }}
         >
           {/* Main Background Image */}

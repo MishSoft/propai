@@ -2,15 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { BuyerList } from "../components/BuyerList/BuyerList";
-import { BuyerModal } from "../components/BuyerModal/BuyerModal"; // დააიმპორტე მოდალი
-import { Buyer } from '@/types/buyer'; // გამოიყენე ერთიანი ტიპი
+import { BuyerModal } from "../components/BuyerModal/BuyerModal";
+import { Buyer } from '@/types/buyer';
 
 export default function BuyersPage() {
-  // 1. მიუთითე ტიპი მასივისთვის, რომ "never[]" ერორი გაქრეს
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // 2. დაამატე სთეითი არჩეული კლიენტისთვის და მოდალისთვის
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -19,7 +16,6 @@ export default function BuyersPage() {
       try {
         const res = await fetch('/api/buyers');
         const data = await res.json();
-        // Casting, რომ TypeScript-ი დაწყნარდეს
         setBuyers(data as Buyer[]);
       } catch (err) {
         console.error("Failed to fetch buyers", err);
@@ -30,7 +26,6 @@ export default function BuyersPage() {
     fetchBuyers();
   }, []);
 
-  // 3. ფუნქცია, რომელიც გადაეცემა BuyerList-ს
   const handleViewDetails = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
     setIsModalOpen(true);
@@ -41,35 +36,41 @@ export default function BuyersPage() {
   };
 
   return (
-    <section className="max-w-6xl mx-auto p-6">
-      <header className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">დაინტერესებული კლიენტები</h1>
-          <p className="text-gray-500 text-sm">
-            {loading ? "მიმდინარეობს ძებნა..." : `სულ ნაპოვნია ${buyers.length} კლიენტი`}
+    /* შევცვალეთ p-6 -> px-4 py-6 და დავამატეთ overflow-x-hidden */
+    <section className="px-4 sm:px-6 py-6 w-full overflow-x-hidden">
+
+      {/* Header: მობილურზე ტექსტი ცენტრში რომ არ აირიოს */}
+      <header className="flex flex-col  sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="flex  flex-col gap-1 min-w-0 flex-1 overflow-hidden">
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight wrap-break-word [hyphens:auto]">
+            დაინტერესებული კლიენტები
+          </h1>
+          <p className="text-slate-500 text-xs sm:text-sm font-medium truncate">
+            {loading ? "მიმდინარეობს ძებნა..." : `ნაპოვნია ${buyers.length} აქტიური კლიენტი`}
           </p>
         </div>
       </header>
 
       {loading ? (
-        <div className="flex justify-center p-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <div className="flex justify-center items-center p-20">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-600"></div>
         </div>
       ) : (
-        /* 4. აუცილებლად მიაწოდე onViewDetails */
-        <BuyerList
-          buyers={buyers}
-          onViewDetails={handleViewDetails}
-          onDelete={handleDeleteBuyer}
-        />
+          <div className="w-full bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100">
+            <div className="overflow-x-auto custom-scrollbar">
+              <BuyerList
+                buyers={buyers}
+                onViewDetails={handleViewDetails}
+                onDelete={handleDeleteBuyer}
+              />
+            </div>
+          </div>
       )}
 
-      {/* 5. დაამატე მოდალის კომპონენტი აქ */}
       <BuyerModal
         buyer={selectedBuyer}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-
       />
     </section>
   );

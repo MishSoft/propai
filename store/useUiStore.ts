@@ -1,6 +1,5 @@
 import { create } from "zustand"
 
-// 1. დავამატეთ agentId, რაც აუცილებელია პორტფოლიოს ფილტრაციისთვის
 export interface ListingType {
   id: string;
   images: string[];
