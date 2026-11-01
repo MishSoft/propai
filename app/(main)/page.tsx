@@ -12,12 +12,17 @@ export default async function Page() {
   const agentId = session?.user?.id || "";
 
   // პირდაპირ სერვერზე წამოვიღოთ მონაცემები
-  const recentListings = agentId ? await db.post.findMany({
+  const rawRecentListings = agentId ? await db.post.findMany({
     where: { authorId: agentId },
     orderBy: { createdAt: 'desc' },
     take: 3,
     select: { id: true, street: true, price: true, createdAt: true }
   }) : [];
+
+  const recentListings = rawRecentListings.map(post => ({
+    ...post,
+    price: Number(post.price)
+  }));
 
   return (
     <main>
