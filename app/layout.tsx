@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css"; // გზა შეიცვალა, რადგან ფაილი ერთი დონით შიგნით შევიდა // გამოიყენე @/ რომ გზა არ აირიოს
 import { getMessages } from 'next-intl/server';
+import { NextIntlClientProvider } from 'next-intl';
+import { cookies } from 'next/headers';
 import { Providers } from "./(main)/components/Providers";
 
 const geistSans = Geist({
@@ -28,13 +30,18 @@ export default async function RootLayout({
 
 
   // სერვერიდან ვკითხულობთ შესაბამის JSON ფაილს (en.json, ka.json...)
+  const messages = await getMessages();
+  const cookieStore = await cookies();
+  const locale = cookieStore.get('NEXT_LOCALE')?.value || 'ka';
 
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Providers>
-          {children}
-        </Providers>
+        <NextIntlClientProvider messages={messages} locale={locale}>
+          <Providers>
+            {children}
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
