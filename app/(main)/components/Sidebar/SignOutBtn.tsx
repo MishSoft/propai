@@ -1,58 +1,42 @@
-"use client"
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { CiLogout } from "react-icons/ci";
-import { CgSpinner } from "react-icons/cg";
+"use client";
+
+import { useState } from 'react';
+import { signOut } from 'next-auth/react';
+import { RiLogoutBoxLine } from "react-icons/ri";
+import { CgSpinner } from 'react-icons/cg';
+import { useTranslations } from 'next-intl';
 
 export default function SignOutBtn() {
-  const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const t = useTranslations('Common');
 
   const handleSignOut = async () => {
+    setIsLoggingOut(true);
     try {
-      setIsLoggingOut(true);
-
-      // მივმართავთ შენს მიერ შექმნილ logout API-ს
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        window.location.href = '/login';
-      }
+      await signOut({ callbackUrl: '/login' });
     } catch (error) {
-      console.error("Logout failed:", error);
-    } finally {
+      console.error('Sign out error:', error);
       setIsLoggingOut(false);
     }
   };
 
   return (
-    <div className='mt-auto xl:px-4 xl:pb-6 w-full'>
-      <button
-        onClick={handleSignOut}
-        disabled={isLoggingOut}
-        className={`
-          flex items-center gap-3 w-full px-4 py-3
-          font-medium rounded-xl transition-all duration-200
-          cursor-pointer group
-          ${isLoggingOut
-            ? 'bg-slate-100 text-slate-400'
-            : 'text-slate-500 hover:bg-red-50 hover:text-red-600'}
-        `}
-      >
+    <button
+      type="button"
+      onClick={handleSignOut}
+      disabled={isLoggingOut}
+      className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-slate-500 font-bold hover:bg-red-50 hover:text-red-600 transition-all duration-200 group cursor-pointer active:scale-95 disabled:opacity-50"
+    >
+      <div className="transition-transform duration-200 group-hover:scale-110">
         {isLoggingOut ? (
-          <CgSpinner className='animate-spin size-5' />
+          <CgSpinner className='animate-spin size-6' />
         ) : (
-            <CiLogout
-              className='transition-transform size-5 duration-200 group-hover:-translate-x-1'
-            />
+          <RiLogoutBoxLine size={24} />
         )}
-
-        <span className='text-[15px] hidden xl:block'>
-          {isLoggingOut ? 'Logging out...' : 'Log Out'}
-        </span>
-      </button>
-    </div>
-  )
+      </div>
+      <span className="text-sm tracking-tight capitalize">
+        {t('logout')}
+      </span>
+    </button>
+  );
 }
