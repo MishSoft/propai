@@ -1,31 +1,39 @@
 import { NextResponse } from "next/server";
+import { handleApiError, requireAuth } from "@/lib/auth-helpers";
 import db from "@/lib/db";
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> } // 1. მიუთითე რომ Promise-ია
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  try {
-    const { id } = await params; // 2. აუცილებლად გამოიყენე await
+  let user: Awaited<ReturnType<typeof requireAuth>>;
 
+  try {
+    user = await requireAuth();
+  } catch (error) {
+    return handleApiError(error);
+  }
+
+  try {
+    const { id } = await params;
     if (!id) {
       return NextResponse.json({ error: "ID missing" }, { status: 400 });
     }
 
-    // 3. წაშლა ბაზიდან
-    await db.buyer.delete({
-      where: {
-        id: id,
-      },
+    const result = await db.buyer.deleteMany({
+      where: { id, authorId: user.id },
     });
+
+    if (result.count === 0) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    // 4. ეს ამოგიგდებს ტერმინალში ზუსტ მიზეზს (მაგ. Prisma-ს შეცდომას)
     console.error("DETAILED_DELETE_ERROR:", error);
     return NextResponse.json(
       { error: "სერვერული შეცდომა წაშლისას" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
