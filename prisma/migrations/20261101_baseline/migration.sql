@@ -1,14 +1,20 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "name" TEXT,
-    "email" TEXT,
+    "email" TEXT NOT NULL,
     "password" TEXT,
     "emailVerified" TIMESTAMP(3),
     "phone" TEXT,
     "image" TEXT,
     "role" TEXT NOT NULL DEFAULT 'Agent',
+    "floor" INTEGER DEFAULT 1,
     "plan" TEXT NOT NULL DEFAULT 'lite',
+    "aiUsageCount" INTEGER NOT NULL DEFAULT 0,
+    "lastAiReset" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -51,7 +57,7 @@ CREATE TABLE "Post" (
     "description" TEXT NOT NULL,
     "city" TEXT NOT NULL,
     "street" TEXT NOT NULL,
-    "price" INTEGER NOT NULL,
+    "price" BIGINT NOT NULL,
     "beds" INTEGER NOT NULL DEFAULT 0,
     "baths" INTEGER NOT NULL DEFAULT 0,
     "sqft" INTEGER NOT NULL DEFAULT 0,
@@ -76,7 +82,8 @@ CREATE TABLE "Buyer" (
     "propertyType" TEXT NOT NULL,
     "minRooms" INTEGER NOT NULL DEFAULT 1,
     "minBaths" INTEGER NOT NULL DEFAULT 1,
-    "budget" INTEGER NOT NULL,
+    "budget" DOUBLE PRECISION NOT NULL,
+    "floor" INTEGER NOT NULL DEFAULT 1,
     "preferredCondition" TEXT NOT NULL DEFAULT 'Any',
     "description" TEXT,
     "status" TEXT NOT NULL DEFAULT 'New',
@@ -85,6 +92,19 @@ CREATE TABLE "Buyer" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Buyer_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Notification" (
+    "id" TEXT NOT NULL,
+    "type" TEXT NOT NULL DEFAULT 'NEW_BUYER',
+    "message" TEXT NOT NULL,
+    "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "userId" TEXT NOT NULL,
+    "buyerId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -107,3 +127,7 @@ ALTER TABLE "Post" ADD CONSTRAINT "Post_authorId_fkey" FOREIGN KEY ("authorId") 
 
 -- AddForeignKey
 ALTER TABLE "Buyer" ADD CONSTRAINT "Buyer_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+

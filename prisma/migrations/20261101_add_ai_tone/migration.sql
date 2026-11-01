@@ -1,0 +1,1 @@
+ALTER TABLE "User" ADD COLUMN "aiTone" TEXT NOT NULL DEFAULT 'professional';
