@@ -1,0 +1,71 @@
+{
+  "Navigation": {
+    "dashboard": "Панель управления",
+    "listings": "Объявления",
+    "buyers": "Клиенты",
+    "settings": "Настройки"
+  },
+  "Dashboard": {
+    "welcome": "С возвращением",
+    "listingsCount": "Мои объявления",
+    "buyersCount": "Потенциальные клиенты",
+    "notificationsCount": "Новые уведомления",
+    "activity_feed": "История активности",
+    "new_listing": "Новое объявление",
+    "no_activity": "Активности нет"
+  },
+  "Listings": {
+    "title": "Управление объявлениями",
+    "addNew": "Добавить объявление",
+    "price": "Цена",
+    "sqft": "м²",
+    "rooms": "Комнаты",
+    "market_value": "Рыночная цена",
+    "view_full_details": "Подробнее",
+    "for_sale": "Продажа",
+    "for_rent": "Аренда",
+    "beds": "Спальни",
+    "baths": "Ванные",
+    "search_placeholder": "Поиск объявлений, локации..."
+  },
+  "Buyers": {
+    "title": "Потенциальные клиенты",
+    "budget": "Бюджет",
+    "status": "Статус",
+    "view_details": "Подробнее",
+    "delete": "Удалить",
+    "main_requirements": "Основные требования",
+    "property_type": "Тип недвижимости",
+    "property_details": "Детали объекта",
+    "floor": "Этаж",
+    "client_comment": "Комментарий клиента",
+    "added": "Добавлено",
+    "contact_client": "Связаться с клиентом",
+    "for_sale": "Покупка",
+    "for_rent": "Аренда"
+  },
+  "Settings": {
+    "title": "Настройки",
+    "language": "Язык",
+    "selectLanguage": "Выберите язык",
+    "profile": "Профиль",
+    "security": "Безопасность",
+    "ai_preferences": "Настройки ИИ",
+    "billing": "Биллинг",
+    "full_name": "Полное имя",
+    "email_address": "Эл. почта",
+    "enter_name": "Введите ваше имя",
+    "ai_personalization": "ИИ Персонализация",
+    "ai_desc": "Как PropAI должен писать описания ваших объявлений?",
+    "ai_apply_notice": "Изменения вступят в силу для новых генераций.",
+    "update_ai_tone": "Обновить тон ИИ"
+  },
+  "Common": {
+    "save": "Сохранить изменения",
+    "saving": "Сохранение...",
+    "logout": "Выйти",
+    "loading": "Загрузка...",
+    "confirm_delete": "Вы уверены, что хотите удалить это?",
+    "deleting": "Удаление..."
+  }
+}

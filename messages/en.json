@@ -1,0 +1,71 @@
+{
+  "Navigation": {
+    "dashboard": "Dashboard",
+    "listings": "Listings",
+    "buyers": "Buyers",
+    "settings": "Settings"
+  },
+  "Dashboard": {
+    "welcome": "Welcome back",
+    "listingsCount": "My Listings",
+    "buyersCount": "Potential Buyers",
+    "notificationsCount": "New Notifications",
+    "activity_feed": "Activity Feed",
+    "new_listing": "New Listing",
+    "no_activity": "No recent activity"
+  },
+  "Listings": {
+    "title": "Manage Listings",
+    "addNew": "Add New Listing",
+    "price": "Price",
+    "sqft": "Sqft",
+    "rooms": "Rooms",
+    "market_value": "Market Value",
+    "view_full_details": "View Details",
+    "for_sale": "For Sale",
+    "for_rent": "For Rent",
+    "beds": "Beds",
+    "baths": "Baths",
+    "search_placeholder": "Search listings, location..."
+  },
+  "Buyers": {
+    "title": "Potential Buyers",
+    "budget": "Budget",
+    "status": "Status",
+    "view_details": "View Details",
+    "delete": "Delete",
+    "main_requirements": "Main Requirements",
+    "property_type": "Property Type",
+    "property_details": "Property Details",
+    "floor": "Floor",
+    "client_comment": "Client Comment",
+    "added": "Added",
+    "contact_client": "Contact Client",
+    "for_sale": "Buy",
+    "for_rent": "Rent"
+  },
+  "Settings": {
+    "title": "Settings",
+    "language": "Language",
+    "selectLanguage": "Select Language",
+    "profile": "Profile",
+    "security": "Security",
+    "ai_preferences": "AI Preferences",
+    "billing": "Billing",
+    "full_name": "Full Name",
+    "email_address": "Email Address",
+    "enter_name": "Enter your name",
+    "ai_personalization": "AI Personalization",
+    "ai_desc": "How should PropAI write your listing descriptions?",
+    "ai_apply_notice": "Changes will apply to new generations.",
+    "update_ai_tone": "Update AI Tone"
+  },
+  "Common": {
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "logout": "Logout",
+    "loading": "Loading...",
+    "confirm_delete": "Are you sure you want to delete this?",
+    "deleting": "Deleting..."
+  }
+}

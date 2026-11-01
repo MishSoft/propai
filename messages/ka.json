@@ -1,0 +1,71 @@
+{
+  "Navigation": {
+    "dashboard": "მართვის პანელი",
+    "listings": "განცხადებები",
+    "buyers": "კლიენტები",
+    "settings": "პარამეტრები"
+  },
+  "Dashboard": {
+    "welcome": "მოგესალმებით",
+    "listingsCount": "ჩემი განცხადებები",
+    "buyersCount": "პოტენციური კლიენტები",
+    "notificationsCount": "ახალი შეტყობინებები",
+    "activity_feed": "აქტივობების ისტორია",
+    "new_listing": "ახალი განცხადება",
+    "no_activity": "აქტივობა არ არის"
+  },
+  "Listings": {
+    "title": "განცხადებების მართვა",
+    "addNew": "განცხადების დამატება",
+    "price": "ფასი",
+    "sqft": "კვ.მ",
+    "rooms": "ოთახები",
+    "market_value": "საბაზრო ფასი",
+    "view_full_details": "დეტალების ნახვა",
+    "for_sale": "იყიდება",
+    "for_rent": "ქირავდება",
+    "beds": "საძინებელი",
+    "baths": "აბაზანა",
+    "search_placeholder": "მოძებნეთ განცხადებები, მდებარეობა..."
+  },
+  "Buyers": {
+    "title": "პოტენციური კლიენტები",
+    "budget": "ბიუჯეტი",
+    "status": "სტატუსი",
+    "view_details": "დეტალები",
+    "delete": "წაშლა",
+    "main_requirements": "ძირითადი მოთხოვნები",
+    "property_type": "ქონების ტიპი",
+    "property_details": "ბინის დეტალები",
+    "floor": "სართული",
+    "client_comment": "კლიენტის კომენტარი",
+    "added": "დაემატა",
+    "contact_client": "დაუკავშირდით კლიენტს",
+    "for_sale": "ყიდვა",
+    "for_rent": "ქირა"
+  },
+  "Settings": {
+    "title": "პარამეტრები",
+    "language": "ენა",
+    "selectLanguage": "აირჩიეთ ენა",
+    "profile": "პროფილი",
+    "security": "უსაფრთხოება",
+    "ai_preferences": "AI პარამეტრები",
+    "billing": "ანგარიშსწორება",
+    "full_name": "სრული სახელი",
+    "email_address": "ელ-ფოსტა",
+    "enter_name": "შეიყვანეთ თქვენი სახელი",
+    "ai_personalization": "AI პერსონალიზაცია",
+    "ai_desc": "როგორ უნდა დაწეროს PropAI თქვენი განცხადების აღწერები?",
+    "ai_apply_notice": "ცვლილებები აისახება ახალ თაობებზე.",
+    "update_ai_tone": "AI ტონის განახლება"
+  },
+  "Common": {
+    "save": "შენახვა",
+    "saving": "ინახება...",
+    "logout": "გამოსვლა",
+    "loading": "იტვირთება...",
+    "confirm_delete": "დარწმუნებული ხართ, რომ გსურთ წაშლა?",
+    "deleting": "იშლება..."
+  }
+}
