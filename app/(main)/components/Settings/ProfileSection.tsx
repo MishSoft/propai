@@ -1,12 +1,16 @@
 "use client"
 import React, { useEffect, useState } from 'react'
 import { UserSettings } from '@/types/settings'
+import { useTranslations } from 'next-intl'
 
 interface ProfileSectionProps {
   user: UserSettings;
 }
 
 export default function ProfileSection({ user }: ProfileSectionProps) {
+  const t = useTranslations('Settings');
+  const common = useTranslations('Common');
+  
   const [name, setName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
@@ -26,12 +30,12 @@ export default function ProfileSection({ user }: ProfileSectionProps) {
     setStatus(null);
     try {
       const response = await fetch('/api/user/update', {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to update");
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.error || "Failed to update");
 
       setStatus({ type: 'success', msg: "Profile updated successfully!" });
       setTimeout(() => window.location.reload(), 1000);
@@ -44,53 +48,53 @@ export default function ProfileSection({ user }: ProfileSectionProps) {
   };
 
   return (
-    <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-      <h3 className="text-lg font-bold text-slate-800 mb-6 tracking-tight">
-        Profile Settings
+    <section className="bg-white/90 p-10 rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/50">
+      <h3 className="text-2xl font-black text-slate-900 mb-8 tracking-tighter uppercase">
+        {t('profile')}
       </h3>
 
       {status && (
-        <div className={`mb-6 p-4 rounded-xl text-sm font-semibold border ${status.type === 'success'
-          ? 'bg-green-50 text-green-700 border-green-100'
-          : 'bg-red-50 text-red-700 border-red-100'
+        <div className={`mb-8 p-5 rounded-2xl text-xs font-black uppercase tracking-widest border shadow-sm ${status.type === 'success'
+          ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+          : 'bg-rose-50 text-rose-600 border-rose-100'
           }`}>
           {status.msg}
         </div>
       )}
 
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-            Full Name
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-2.5">
+          <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
+            {t('full_name') || 'Full Name'}
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="p-3 rounded-xl border border-slate-200 outline-none focus:border-purple-500 transition-all text-sm font-medium"
-            placeholder="Enter your name"
+            className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 transition-all text-sm font-black text-slate-900 placeholder:text-slate-400 shadow-sm"
+            placeholder={t('enter_name') || 'Enter your name'}
           />
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-            Email Address
+        <div className="flex flex-col gap-2.5">
+          <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
+            {t('email_address') || 'Email Address'}
           </label>
           <input
             type="email"
             disabled
             value={user.email ?? ""}
-            className="p-3 rounded-xl border border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed text-sm font-medium"
+            className="p-4 rounded-2xl border border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed text-sm font-black italic shadow-inner"
           />
-          <p className="text-[10px] text-slate-400 px-1">Email cannot be changed</p>
+          <p className="text-[10px] text-slate-400 px-2 font-bold uppercase tracking-tight opacity-70">Email cannot be changed</p>
         </div>
 
         <button
           onClick={handleUpdate}
           disabled={loading || !name || name === user.name}
-          className="w-full md:w-fit bg-purple-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-purple-700 disabled:opacity-50 transition-all shadow-lg"
+          className="w-full md:w-fit bg-slate-900 text-white px-12 py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-purple-600 disabled:opacity-50 transition-all duration-300 shadow-xl shadow-slate-900/10 active:scale-95 cursor-pointer"
         >
-          {loading ? "Saving..." : "Save Changes"}
+          {loading ? common('saving') : common('save')}
         </button>
       </div>
     </section>

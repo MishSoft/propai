@@ -1,7 +1,18 @@
 import { NextResponse } from "next/server";
+import { requireAuth, handleApiError } from "@/lib/auth-helpers";
+import { checkAndIncrementAiUsage } from "@/lib/ai-limits";
+import { logger } from "@/lib/logger";
+import db from "@/lib/db";
+import { AI_TONE_INSTRUCTIONS, DEFAULT_AI_TONE, isAiTone } from "@/lib/ai-tone";
 
 export async function POST(req: Request) {
   try {
+    const user = await requireAuth();
+    
+    // Check and increment AI usage (based on plan)
+    const { count, limit } = await checkAndIncrementAiUsage(user.id);
+    logger.info(`AI_REWRITE_REQUEST: user=${user.id}, usage=${count}/${limit}`);
+
     const body = await req.json();
     const { description, languages } = body as { description: string, languages: string[] };
 
@@ -15,11 +26,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "სერვერის კონფიგურაციის შეცდომა" }, { status: 500 });
     }
 
+    const dbUser = await db.user.findUnique({
+      where: { id: user.id },
+      select: { aiTone: true },
+    });
+    const tone = isAiTone(dbUser?.aiTone) ? dbUser.aiTone : DEFAULT_AI_TONE;
+
     // 2. სისტემური ინსტრუქცია (უფრო კონკრეტული)
     const systemInstruction = `
       შენ ხარ უძრავი ქონების გაყიდვების ექსპერტი.
       დავალება: გადააქციე მოწოდებული ტექსტი პროფესიონალურ განცხადებად.
       ენები: ${languages.join(", ")}.
+      ${AI_TONE_INSTRUCTIONS[tone]}
 
       ფორმატირება:
       - გამოიყენე აბზაცები და ბულეტები.
@@ -63,9 +81,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ rewrittenText });
 
   } catch (error: unknown) {
-    // Error handling any-ს გარეშე
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-    console.error("❌ AI_ROUTE_ERROR:", errorMessage);
-    return NextResponse.json({ error: "სერვერის შეცდომა" }, { status: 500 });
+    return handleApiError(error);
   }
 }

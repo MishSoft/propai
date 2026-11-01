@@ -1,45 +1,63 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { z } from "zod";
 import db from "@/lib/db";
-import { authOptions } from "@/lib/auth";
+import { requireAuth, handleApiError } from "@/lib/auth-helpers";
+import { logger } from "@/lib/logger";
+import { AI_TONES } from "@/lib/ai-tone";
 
-// ტიპი შემოსული მონაცემებისთვის
-interface UpdateRequestBody {
-  name?: string;
-  bio?: string;
-  aiTone?: string;
-}
+const updateUserSchema = z
+  .object({
+    name: z.string().trim().min(1).max(100).optional(),
+    phone: z
+      .string()
+      .trim()
+      .max(30)
+      .regex(/^\+?[\d\s()-]*$/, "Invalid phone number")
+      .nullable()
+      .optional(),
+    image: z.string().trim().url().max(2048).nullable().optional(),
+    aiTone: z.enum(AI_TONES).optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, "No fields to update");
 
-export async function POST(req: Request) {
+export async function PATCH(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await requireAuth();
 
-    // 1. ავტორიზაციის შემოწმება
-    if (!session?.user?.email) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    const body: UpdateRequestBody = await req.json();
-    const { name, bio, aiTone } = body;
+    const parsed = updateUserSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
+        { status: 400 }
+      );
+    }
 
-    // 2. ბაზის განახლება
+    const { name, phone, image, aiTone } = parsed.data;
+
     const updatedUser = await db.user.update({
-      where: { email: session.user.email },
-      data: {
-        name: name,
-        // შენიშვნა: დარწმუნდი რომ ეს ველები გაქვს Prisma-ს მოდელში
-        // bio: bio,
-        // aiTone: aiTone
-      },
+      where: { id: user.id },
+      data: { name, phone, image, aiTone },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        image: true,
+        aiTone: true
+      }
     });
 
-    return NextResponse.json({
-      message: "Profile updated successfully",
-      user: { name: updatedUser.name }
-    }, { status: 200 });
+    logger.info(`User profile updated for ${user.id}`);
+    return NextResponse.json(updatedUser, { status: 200 });
 
   } catch (error) {
-    console.error("Update Error:", error);
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    return handleApiError(error);
   }
 }
