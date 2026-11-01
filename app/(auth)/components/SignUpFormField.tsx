@@ -1,6 +1,7 @@
 "use client"
 import React, { FormEvent, useState, ChangeEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import { getCredentialsSignInError } from '@/lib/auth-shared'
 import { signIn } from "next-auth/react" // აუცილებელი იმპორტი
 import FormHeader from './FormHeader'
 import Separator from './Separator'
@@ -77,11 +78,11 @@ export default function SignUpFormField() {
         email: inputFields.email.trim().toLowerCase(),
         password: inputFields.password,
         redirect: false,
+        callbackUrl: "/",
       })
 
-      if (loginRes?.ok) {
-        router.push('/')
-        router.refresh()
+      if (getCredentialsSignInError(loginRes) === null) {
+        window.location.href = '/'
       } else {
         router.push('/login?registered=true')
       }

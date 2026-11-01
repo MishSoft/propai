@@ -11,6 +11,7 @@ declare module "next-auth" {
       email?: string | null
       image?: string | null
     }
+    error?: string
   }
 
   interface User {
@@ -25,5 +26,8 @@ declare module "next-auth/jwt" {
     id: string
     plan: string
     role: string
+    // Unix seconds of the original sign-in; never refreshed.
+    authAt?: number
+    error?: string
   }
 }

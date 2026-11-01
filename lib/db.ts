@@ -1,6 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
+import { validateEnv } from "./env-check";
+
+validateEnv();
 
 // 1. გლობალური ტიპის განსაზღვრა, რომ TypeScript-მა არ იწუწუნოს
 const globalForPrisma = global as unknown as {

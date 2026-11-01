@@ -8,6 +8,7 @@ import Separator from './Separator';
 import AuthWith from './AuthWith';
 import SignInBtn from './SignInBtn';
 import { signIn } from 'next-auth/react';
+import { getAuthErrorMessage, getCredentialsSignInError, getSafeCallbackUrl, normalizeEmail } from '@/lib/auth-shared';
 
 export default function SignInFormField() {
   const router = useRouter();
@@ -17,8 +18,8 @@ export default function SignInFormField() {
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const errorCode = searchParams.get("error");
-    if (errorCode === "OAuthAccountNotLinked") {
-      setError("We couldn't complete sign-in with this provider. If you have an account, sign in using your original method.");
+    if (errorCode) {
+      setError(getAuthErrorMessage(errorCode) ?? "");
     } else if (searchParams.get("registered") === "true") {
       setError("Your account was created. Please sign in with your email and password.");
     }
@@ -45,24 +46,26 @@ export default function SignInFormField() {
     setLoading(true);
     setError("");
 
+    // Keep the user on the page they requested (validated as a same-origin path).
+    const callbackUrl = getSafeCallbackUrl(new URLSearchParams(window.location.search).get("callbackUrl"));
+
     try {
-      // ნაცვლად fetch-ისა, ვიყენებთ NextAuth-ის signIn ფუნქციას
       const result = await signIn("credentials", {
-        redirect: false, // false, რომ შეცდომა ხელით დავიჭიროთ აქ
-        email: inputFields.email,
+        redirect: false,
+        email: normalizeEmail(inputFields.email) ?? "",
         password: inputFields.password,
+        callbackUrl,
       });
 
-      if (result?.error) {
-        // თუ NextAuth-მა დააბრუნა შეცდომა (მაგ. არასწორი პაროლი)
-        setError("Invalid email or password");
-      } else {
-        // წარმატების შემთხვევაში გადავდივართ მთავარ გვერდზე
-        window.location.href = '/';
+      const errorCode = getCredentialsSignInError(result);
+      if (errorCode) {
+        setError(getAuthErrorMessage(errorCode) ?? "");
+        return;
       }
 
-    } catch (err: any) {
-      setError("An unexpected error occurred. Please try again.");
+      window.location.href = callbackUrl;
+    } catch {
+      setError(getAuthErrorMessage("AuthUnavailable") ?? "");
     } finally {
       setLoading(false);
     }

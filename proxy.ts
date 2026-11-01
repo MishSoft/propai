@@ -1,52 +1,51 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { getToken } from 'next-auth/jwt'
-
-// საჯარო გვერდების სია (ენის პრეფიქსის გარეშე)
-const PUBLIC_ROUTES = ['/login', '/register', '/agent', '/listings']
+import { NextResponse, type NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { isAuthTimeValid, SESSION_EXPIRED_ERROR } from "@/lib/session-policy";
+import { getRouteAccess } from "@/lib/proxy-policy";
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const { pathname, search } = request.nextUrl;
+  const access = getRouteAccess(pathname, request.method);
 
-  // 1. გამოვტოვოთ სტატიკური ფაილები და API
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.includes('.')
-  ) {
-    return NextResponse.next()
+  if (access === "static") {
+    return NextResponse.next();
   }
 
-  // 2. სესიის შემოწმება
-  const session = await getToken({
+  const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
-  })
+  });
+  const hasValidSession =
+    !!token && !token.error && isAuthTimeValid(token.authAt);
 
-  // 3. საჯარო გვერდის შემოწმება
-  const isPublicPage = PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  )
-
-  // 4. გადამისამართების ლოგიკა (Redirect Logic)
-
-  // თუ არაა საჯარო გვერდი და იუზერი არაა დალოგინებული -> Login
-  if (!isPublicPage && !session) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  if (access === "public") {
+    if (
+      hasValidSession &&
+      (pathname === "/login" || pathname === "/register")
+    ) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    return NextResponse.next();
   }
 
-  // თუ დალოგინებულია და ცდილობს შესვლას login/register-ზე -> Home (/)
-  if (session && (pathname === '/login' || pathname === '/register')) {
-    return NextResponse.redirect(new URL('/', request.url))
+  if (hasValidSession) {
+    return NextResponse.next();
   }
 
-  return NextResponse.next()
-}
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-export async function middleware(request: NextRequest) {
-  return proxy(request)
+  const loginUrl = new URL("/login", request.url);
+  loginUrl.searchParams.set("callbackUrl", `${pathname}${search}`);
+  // A token that exists but is no longer valid means the 24-hour session ended.
+  if (token) {
+    loginUrl.searchParams.set("error", SESSION_EXPIRED_ERROR);
+  }
+  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
-  matcher: ['/((?!api|_next|favicon.ico).*)'],
-}
+  // Only Next.js internals are skipped. Every other path, including dotted paths, goes through getRouteAccess.
+  matcher: ["/((?!_next/).*)"],
+};

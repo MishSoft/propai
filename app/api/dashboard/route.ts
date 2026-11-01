@@ -1,22 +1,14 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth, handleApiError } from "@/lib/auth-helpers";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-
-    // 1. უსაფრთხოების შემოწმება
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userId = session.user.id;
+    const user = await requireAuth();
 
     // 2. მონაცემების წამოღება (ოპტიმიზებული ქუერი)
     const recentListings = await db.post.findMany({
-      where: { authorId: userId },
+      where: { authorId: user.id },
       orderBy: { createdAt: 'desc' },
       take: 3,
       select: {
@@ -41,12 +33,6 @@ export async function GET() {
     );
 
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("❌ DASHBOARD_GET_ERROR:", message);
-
-    return NextResponse.json(
-      { error: "აქტივობების წამოღება ვერ მოხერხდა" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
