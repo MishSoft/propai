@@ -8,14 +8,18 @@ interface BuyerListProps {
   onDelete: (id: string) => void;
 }
 
+import { useTranslations } from 'next-intl';
+
 export const BuyerList: React.FC<BuyerListProps> = ({ buyers, onViewDetails, onDelete }) => {
+  const common = useTranslations('Common');
+  const t = useTranslations('Buyers');
+
   if (buyers.length === 0) {
     return (
-      /* p-24 შევცვალეთ px-6 py-12-ით, რომ მობილურზე დაეტიოს */
-      <div className="bg-white border border-dashed border-gray-200 rounded-3xl px-6 py-12 sm:py-24 text-center w-full">
+      <div className="glass-card px-6 py-12 sm:py-24 text-center w-full border-dashed border-slate-200 bg-white/90 shadow-2xl shadow-slate-200/50">
         <div className="max-w-xs mx-auto">
-          <p className="text-gray-400 font-medium">კლიენტების სია ცარიელია</p>
-          <p className="text-gray-300 text-sm mt-1">ახალი მოთხოვნები აქ გამოჩნდება</p>
+          <p className="text-slate-900 font-black tracking-tighter uppercase text-lg">List is empty</p>
+          <p className="text-slate-500 text-sm mt-2 font-medium tracking-tight">New requests from potential clients will appear here</p>
         </div>
       </div>
     );
