@@ -18,7 +18,7 @@ export default function SignUpFormField() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [selectedPlan, setSelectedPlan] = useState('lite')
+  const selectedPlan = 'lite'
 
   const [inputFields, setInputFields] = useState({
     fullname: "",
@@ -38,12 +38,15 @@ export default function SignUpFormField() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError('')
 
     if (inputFields.password !== inputFields.repeat) {
       setError("Passwords do not match!")
       setLoading(false)
       return
     }
+
+    let accountCreated = false
 
     try {
       // 1. რეგისტრაციის API-ს გამოძახება
@@ -52,18 +55,26 @@ export default function SignUpFormField() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName: inputFields.fullname,
-          email: inputFields.email,
+          email: inputFields.email.trim().toLowerCase(),
           password: inputFields.password,
-          plan: selectedPlan
         })
       })
 
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message)
+      const data: unknown = await response.json().catch(() => null)
+      if (!response.ok) {
+        const message =
+          data && typeof data === "object" && "message" in data && typeof data.message === "string"
+            ? data.message
+            : "Registration failed. Please check your details and try again."
+        setError(message)
+        return
+      }
+
+      accountCreated = true
 
       // 2. 🔥 აი ეს არის რამაც "აურია" - ავტომატური ლოგინი რეგისტრაციის მერე
       const loginRes = await signIn("credentials", {
-        email: inputFields.email,
+        email: inputFields.email.trim().toLowerCase(),
         password: inputFields.password,
         redirect: false,
       })
@@ -72,10 +83,14 @@ export default function SignUpFormField() {
         router.push('/')
         router.refresh()
       } else {
-        router.push('/login')
+        router.push('/login?registered=true')
       }
-    } catch (err: any) {
-      setError(err.message)
+    } catch {
+      if (accountCreated) {
+        router.push('/login?registered=true')
+      } else {
+        setError("Registration failed. Please try again.")
+      }
     } finally {
       setLoading(false)
     }
@@ -108,7 +123,7 @@ export default function SignUpFormField() {
           <div className='flex flex-col gap-1.5'>
             <label className="text-[10px] uppercase tracking-widest font-black text-slate-400">Password</label>
             <div className='bg-slate-50 border border-slate-200 rounded-xl flex items-center px-3 focus-within:border-blue-400 transition-all'>
-              <input name="password" required className='p-3 w-full bg-transparent outline-none text-sm' type={isShowPassword.pass ? "text" : "password"} value={inputFields.password} onChange={handleChange} placeholder='********' />
+              <input name="password" required minLength={8} maxLength={72} className='p-3 w-full bg-transparent outline-none text-sm' type={isShowPassword.pass ? "text" : "password"} value={inputFields.password} onChange={handleChange} placeholder='********' />
               <button type="button" onClick={() => setIsShowPassword(p => ({ ...p, pass: !p.pass }))} className="text-slate-400">{isShowPassword.pass ? <FaEye /> : <FaEyeSlash />}</button>
             </div>
           </div>
@@ -116,7 +131,7 @@ export default function SignUpFormField() {
           <div className='flex flex-col gap-1.5'>
             <label className="text-[10px] uppercase tracking-widest font-black text-slate-400">Repeat Password</label>
             <div className='bg-slate-50 border border-slate-200 rounded-xl flex items-center px-3 focus-within:border-blue-400 transition-all'>
-              <input name="repeat" required className='p-3 w-full bg-transparent outline-none text-sm' type={isShowPassword.confirm ? "text" : "password"} value={inputFields.repeat} onChange={handleChange} placeholder='********' />
+              <input name="repeat" required minLength={8} maxLength={72} className='p-3 w-full bg-transparent outline-none text-sm' type={isShowPassword.confirm ? "text" : "password"} value={inputFields.repeat} onChange={handleChange} placeholder='********' />
               <button type="button" onClick={() => setIsShowPassword(p => ({ ...p, confirm: !p.confirm }))} className="text-slate-400">{isShowPassword.confirm ? <FaEye /> : <FaEyeSlash />}</button>
             </div>
           </div>
@@ -136,10 +151,9 @@ export default function SignUpFormField() {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              onClick={() => setSelectedPlan(plan.id)}
-              className={`relative p-5 rounded-2xl cursor-pointer border-2 transition-all ${selectedPlan === plan.id
+              className={`relative p-5 rounded-2xl border-2 transition-all ${selectedPlan === plan.id
                 ? 'border-blue-500 bg-white shadow-lg scale-[1.02]'
-                : 'border-transparent bg-slate-100 hover:bg-slate-200'
+                : 'border-transparent bg-slate-100'
                 }`}
             >
               <div className='flex justify-between items-center mb-2'>

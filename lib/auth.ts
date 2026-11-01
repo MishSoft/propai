@@ -2,15 +2,16 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import FacebookProvider from "next-auth/providers/facebook";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import db from "@/lib/db";
+import bcrypt from "bcrypt";
 
 export const authOptions: NextAuthOptions = {
-  // PrismaAdapter-ს გადავცემთ ჩვენს სინგლტონ db ინსტანსს
   adapter: PrismaAdapter(db),
   secret: process.env.NEXTAUTH_SECRET,
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
   },
   providers: [
     GoogleProvider({
@@ -21,30 +22,104 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.FACEBOOK_CLIENT_ID!,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
     }),
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (
+          typeof credentials?.email !== "string" ||
+          typeof credentials.password !== "string" ||
+          !credentials.email.trim() ||
+          !credentials.password
+        ) {
+          throw new Error("Invalid email or password");
+        }
+
+        const user = await db.user.findUnique({
+          where: { email: credentials.email.trim().toLowerCase() },
+        });
+
+        if (!user || !user.password) {
+          throw new Error("Invalid email or password");
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(
+          credentials.password,
+          user.password,
+        );
+
+        if (!isPasswordCorrect) {
+          throw new Error("Invalid email or password");
+        }
+
+        return user;
+      },
+    }),
   ],
   callbacks: {
-    // JWT ქოლბექი ეშვება ტოკენის შექმნისას ან განახლებისას
     async jwt({ token, user }) {
       if (user) {
-        // აქ user-ს უკვე აქვს შენს .d.ts ფაილში აღწერილი ველები
         token.id = user.id;
-        token.plan = user.plan;
-        token.role = user.role;
+        token.plan = (user as any).plan;
+        token.role = (user as any).role;
+      } else if (!token.id && token.email) {
+        const dbUser = await db.user.findUnique({
+          where: { email: token.email },
+        });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.plan = dbUser.plan;
+          token.role = dbUser.role;
+        }
       }
       return token;
     },
-    // Session ქოლბექი განსაზღვრავს რა მონაცემები იყოს ხელმისაწვდომი ფრონტზე
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id;
-        session.user.plan = token.plan;
-        session.user.role = token.role;
+        (session.user as any).id = token.id;
+        (session.user as any).plan = token.plan;
+        (session.user as any).role = token.role;
       }
       return session;
     },
   },
-  // დამატებითი უსაფრთხოებისთვის შეგვიძლია მივუთითოთ გვერდები
+  /*
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === "production"
+        ? "__Secure-next-auth.session-token"
+        : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
+  */
+  events: {
+    async signIn({ user, account, profile }) {
+      console.log("[AUTH_DEBUG] signIn event:", {
+        user: user?.id,
+        provider: account?.provider,
+      });
+    },
+    async createUser({ user }) {
+      console.log("[AUTH_DEBUG] createUser event:", user.id);
+    },
+    async linkAccount({ user, account }) {
+      console.log("[AUTH_DEBUG] linkAccount event:", {
+        user: user.id,
+        provider: account.provider,
+      });
+    },
+  },
   pages: {
-    signIn: '/login', // თუ გაქვს პერსონალური ლოგინის გვერდი
-  }
+    signIn: "/login",
+  },
+  debug: true,
 };

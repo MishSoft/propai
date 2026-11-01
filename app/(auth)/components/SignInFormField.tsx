@@ -15,9 +15,12 @@ export default function SignInFormField() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const errorCode = new URLSearchParams(window.location.search).get("error");
+    const searchParams = new URLSearchParams(window.location.search);
+    const errorCode = searchParams.get("error");
     if (errorCode === "OAuthAccountNotLinked") {
       setError("We couldn't complete sign-in with this provider. If you have an account, sign in using your original method.");
+    } else if (searchParams.get("registered") === "true") {
+      setError("Your account was created. Please sign in with your email and password.");
     }
   }, []);
 
