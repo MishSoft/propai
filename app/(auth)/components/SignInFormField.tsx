@@ -1,5 +1,5 @@
 "use client"
-import React, { ChangeEvent, FormEvent, useState } from 'react'
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import FormHeader from './FormHeader';
@@ -13,6 +13,13 @@ export default function SignInFormField() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const errorCode = new URLSearchParams(window.location.search).get("error");
+    if (errorCode === "OAuthAccountNotLinked") {
+      setError("We couldn't complete sign-in with this provider. If you have an account, sign in using your original method.");
+    }
+  }, []);
 
   const [inputFields, setInputFields] = useState({
     email: "",
