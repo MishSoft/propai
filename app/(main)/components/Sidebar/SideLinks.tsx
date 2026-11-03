@@ -1,59 +1,50 @@
 "use client"
-import Link from 'next/link'
-import Logo from './Logo'
-import { MdDashboard } from "react-icons/md";
-import { FaListAlt } from "react-icons/fa";
-import { IoPeople, IoSettingsSharp } from "react-icons/io5";
+import { RiDashboardLine, RiHome3Line, RiUserHeartLine, RiSettings3Line } from "react-icons/ri";
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
-const links = [
-  { id: 1, title: "Dashboard", icon: MdDashboard, href: "/" },
-  { id: 2, title: "Listings", icon: FaListAlt, href: "/listings" },
-  { id: 3, title: "Buyers", icon: IoPeople, href: "/buyers" },
-  { id: 4, title: "Settings", icon: IoSettingsSharp, href: "/settings" },
-]
+interface SideLinksProps {
+  onNavigate?: () => void;
+}
 
-export default function SideLinks() {
-  const pathname = usePathname()
+export default function SideLinks({ onNavigate }: SideLinksProps) {
+  const pathname = usePathname();
+  const t = useTranslations('Navigation');
+
+  const links = [
+    { id: 1, title: t('dashboard'), href: "/", icon: <RiDashboardLine size={24} /> },
+    { id: 2, title: t('listings'), href: "/listings", icon: <RiHome3Line size={24} /> },
+    { id: 3, title: t('buyers'), href: "/buyers", icon: <RiUserHeartLine size={24} /> },
+    { id: 4, title: t('settings'), href: "/settings", icon: <RiSettings3Line size={24} /> },
+  ];
 
   return (
-    <aside className='flex flex-col'>
-      {/* Logo Section */}
-      <div className='p-2 xl:p-6 mb-2'>
-        <Logo />
-      </div>
+    <nav className='flex flex-col gap-3 w-full'>
+      {links.map((link) => {
+        const isActive = pathname === link.href;
 
-      {/* Navigation Links */}
-      <nav className='flex-1 px-4 space-y-1'>
-        {links.map((link) => {
-          const isActive = pathname === link.href;
-
-          return (
-            <Link
-              key={link.id}
-              href={link.href}
-              className={`
-                flex items-center gap-3 xl:px-4 flex-col xl:flex-row py-3 rounded-lg transition-all duration-200 group
-                ${isActive
-                  ? "xl:bg-purple-50 text-purple-700 font-medium"
-                  : "text-slate-600 xl:hover:bg-slate-50 hover:text-slate-900"}
-              `}
-            >
-              <link.icon
-                size={22}
-                className={`${isActive ? "xl:text-purple-700" : "text-slate-400 group-hover:text-slate-600"}`}
-              />
-              <span className="text-[15px] hidden xl:block">{link.title}</span>
-
-              {/* Active Indicator (პატარა ხაზი მარჯვნივ ან მარცხნივ უფრო დახვეწილისთვის) */}
-              {isActive && (
-                <div className="xl:ml-auto w-1.5 h-1.5 rounded-full bg-purple-600" />
-              )}
-            </Link>
-          )
-        })}
-      </nav>
-
-    </aside>
+        return (
+          <Link
+            key={link.id}
+            href={link.href}
+            onClick={onNavigate}
+            className={`flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-200 group ${
+              isActive
+                ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30 active:scale-95'
+                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <span className={`transition-transform duration-200 ${!isActive && 'group-hover:scale-110'}`}>
+              {link.icon}
+            </span>
+            <span className="tracking-tight">{link.title}</span>
+            {isActive && (
+              <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full shadow-sm animate-pulse" />
+            )}
+          </Link>
+        )
+      })}
+    </nav>
   )
 }

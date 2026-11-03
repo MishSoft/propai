@@ -36,6 +36,11 @@ interface useUiStoreProps {
   selectedListing: ListingType | null;
   openDetailsModal: (listing: ListingType) => void;
   closeDetailsModal: () => void;
+
+  isSidebarOpen: boolean;
+  openSidebar: () => void;
+  closeSidebar: () => void;
+  toggleSidebar: () => void;
 }
 
 export const useUiStore = create<useUiStoreProps>((set) => ({
@@ -79,4 +84,10 @@ export const useUiStore = create<useUiStoreProps>((set) => ({
     selectedListing: null,
     isDetailsModalOpen: false
   }),
+
+  // Responsive Sidebar Drawer
+  isSidebarOpen: false,
+  openSidebar: () => set({ isSidebarOpen: true }),
+  closeSidebar: () => set({ isSidebarOpen: false }),
+  toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
 }))

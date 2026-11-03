@@ -3,7 +3,10 @@
     "dashboard": "Dashboard",
     "listings": "Listings",
     "buyers": "Buyers",
-    "settings": "Settings"
+    "settings": "Settings",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "mainNavigation": "Main navigation"
   },
   "Dashboard": {
     "welcome": "Welcome back",

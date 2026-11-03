@@ -3,7 +3,10 @@
     "dashboard": "Панель управления",
     "listings": "Объявления",
     "buyers": "Клиенты",
-    "settings": "Настройки"
+    "settings": "Настройки",
+    "openMenu": "Открыть меню",
+    "closeMenu": "Закрыть меню",
+    "mainNavigation": "Основная навигация"
   },
   "Dashboard": {
     "welcome": "С возвращением",

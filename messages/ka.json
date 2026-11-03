@@ -3,7 +3,10 @@
     "dashboard": "მართვის პანელი",
     "listings": "განცხადებები",
     "buyers": "კლიენტები",
-    "settings": "პარამეტრები"
+    "settings": "პარამეტრები",
+    "openMenu": "მენიუს გახსნა",
+    "closeMenu": "მენიუს დახურვა",
+    "mainNavigation": "მთავარი ნავიგაცია"
   },
   "Dashboard": {
     "welcome": "მოგესალმებით",
