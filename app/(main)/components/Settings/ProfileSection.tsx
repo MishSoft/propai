@@ -3,6 +3,15 @@ import React, { useEffect, useState } from 'react'
 import { UserSettings } from '@/types/settings'
 import { useTranslations } from 'next-intl'
 
+const PHONE_CHARS_PATTERN = /^\+?[\d\s().-]*$/;
+
+function isValidPhone(value: string): boolean {
+  if (value === "") return true;
+  if (!PHONE_CHARS_PATTERN.test(value)) return false;
+  const digits = value.replace(/\D/g, "").length;
+  return digits >= 7 && digits <= 15;
+}
+
 interface ProfileSectionProps {
   user: UserSettings;
 }
@@ -12,6 +21,7 @@ export default function ProfileSection({ user }: ProfileSectionProps) {
   const common = useTranslations('Common');
   
   const [name, setName] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
 
@@ -19,11 +29,18 @@ export default function ProfileSection({ user }: ProfileSectionProps) {
     if (user?.name) {
       setName(user.name);
     }
+    setPhone(user?.phone ?? "");
   }, [user]);
 
   if (!user) {
     return <div className="p-6 text-slate-500 animate-pulse">Loading profile...</div>;
   }
+
+  const trimmedPhone = phone.trim();
+  const phoneValid = isValidPhone(trimmedPhone);
+  const phoneChanged = (trimmedPhone || null) !== (user.phone || null);
+  const nameChanged = name !== (user.name ?? "");
+  const canSave = !loading && !!name.trim() && phoneValid && (nameChanged || phoneChanged);
 
   const handleUpdate = async () => {
     setLoading(true);
@@ -32,7 +49,7 @@ export default function ProfileSection({ user }: ProfileSectionProps) {
       const response = await fetch('/api/user/update', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, phone: trimmedPhone === "" ? null : trimmedPhone }),
       });
       const data = await response.json().catch(() => null);
       if (!response.ok) throw new Error(data?.error || "Failed to update");
@@ -89,9 +106,30 @@ export default function ProfileSection({ user }: ProfileSectionProps) {
           <p className="text-[10px] text-slate-400 px-2 font-bold uppercase tracking-tight opacity-70">Email cannot be changed</p>
         </div>
 
+        <div className="flex flex-col gap-2.5">
+          <label htmlFor="profile-phone" className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
+            {t('phone_number')}
+          </label>
+          <input
+            id="profile-phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            aria-invalid={!phoneValid}
+            aria-describedby={!phoneValid ? "profile-phone-error" : undefined}
+            className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 transition-all text-sm font-black text-slate-900 placeholder:text-slate-400 shadow-sm"
+            placeholder={t('enter_phone')}
+          />
+          {!phoneValid && (
+            <p id="profile-phone-error" className="text-[10px] text-rose-500 px-2 font-bold tracking-tight">
+              {t('phone_invalid')}
+            </p>
+          )}
+        </div>
+
         <button
           onClick={handleUpdate}
-          disabled={loading || !name || name === user.name}
+          disabled={!canSave}
           className="w-full md:w-fit bg-slate-900 text-white px-12 py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-purple-600 disabled:opacity-50 transition-all duration-300 shadow-xl shadow-slate-900/10 active:scale-95 cursor-pointer"
         >
           {loading ? common('saving') : common('save')}

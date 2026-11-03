@@ -16,12 +16,13 @@ export default async function SettingsPage() {
 
   const dbUser = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { name: true, image: true, aiTone: true },
+    select: { name: true, phone: true, image: true, aiTone: true },
   });
   const aiTone = isAiTone(dbUser?.aiTone) ? dbUser.aiTone : DEFAULT_AI_TONE;
   const freshUser = {
     ...session.user,
     name: dbUser?.name ?? session.user.name,
+    phone: dbUser?.phone ?? null,
     image: dbUser?.image ?? session.user.image,
     aiTone,
   };

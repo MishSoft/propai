@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
+import { isValidPhoneNumber } from "@/lib/phone";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { fullName, email, password } = body as Record<string, unknown>;
+  const { fullName, email, password, phone } = body as Record<string, unknown>;
 
   if (
     typeof fullName !== "string" ||
@@ -35,6 +36,14 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
+
+  if (typeof phone !== "string" || !isValidPhoneNumber(phone)) {
+    return NextResponse.json(
+      { message: "Enter a valid phone number (7 to 15 digits)" },
+      { status: 400 },
+    );
+  }
+  const normalizedPhone = phone.trim();
 
   const normalizedEmail = email.trim().toLowerCase();
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -73,6 +82,7 @@ export async function POST(req: Request) {
         password: hashedPassword,
         plan: "lite",
         name: fullName.trim(),
+        phone: normalizedPhone,
         role: "Agent",
       },
       select: { id: true, email: true, name: true, plan: true, role: true },

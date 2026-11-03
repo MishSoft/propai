@@ -8,6 +8,7 @@ import Separator from './Separator'
 import AuthWith from './AuthWith'
 import { FaEyeSlash, FaEye, FaCheckCircle } from 'react-icons/fa'
 import SignUpBtn from './SignUpBtn'
+import { isValidPhoneNumber, PHONE_MAX_LENGTH } from '@/lib/phone'
 
 const plans = [
   { id: 'lite', name: 'Lite', price: 10, limit: 5, features: ['5 Listings Max', 'AI Basic'] },
@@ -24,6 +25,7 @@ export default function SignUpFormField() {
   const [inputFields, setInputFields] = useState({
     fullname: "",
     email: "",
+    phone: "",
     password: "",
     repeat: ""
   })
@@ -47,6 +49,12 @@ export default function SignUpFormField() {
       return
     }
 
+    if (!isValidPhoneNumber(inputFields.phone)) {
+      setError("Enter a valid phone number (7 to 15 digits).")
+      setLoading(false)
+      return
+    }
+
     let accountCreated = false
 
     try {
@@ -57,6 +65,7 @@ export default function SignUpFormField() {
         body: JSON.stringify({
           fullName: inputFields.fullname,
           email: inputFields.email.trim().toLowerCase(),
+          phone: inputFields.phone.trim(),
           password: inputFields.password,
         })
       })
@@ -119,6 +128,11 @@ export default function SignUpFormField() {
           <div className='flex flex-col gap-1.5'>
             <label className="text-[10px] uppercase tracking-widest font-black text-slate-400">Email Address</label>
             <input name="email" value={inputFields.email} onChange={handleChange} required className='p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-400 transition-all' type="email" placeholder='name@agency.com' />
+          </div>
+
+          <div className='flex flex-col gap-1.5'>
+            <label htmlFor="signup-phone" className="text-[10px] uppercase tracking-widest font-black text-slate-400">Phone Number</label>
+            <input id="signup-phone" name="phone" value={inputFields.phone} onChange={handleChange} required maxLength={PHONE_MAX_LENGTH} className='p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-400 transition-all' type="tel" placeholder='+995 555 123 456' />
           </div>
 
           <div className='flex flex-col gap-1.5'>

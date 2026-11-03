@@ -12,7 +12,12 @@ const updateUserSchema = z
       .string()
       .trim()
       .max(30)
-      .regex(/^\+?[\d\s()-]*$/, "Invalid phone number")
+      .regex(/^\+?[\d\s().-]*$/, "Invalid phone number")
+      .refine((value) => {
+        if (value === "") return true;
+        const digits = value.replace(/\D/g, "").length;
+        return digits >= 7 && digits <= 15;
+      }, "Phone number must contain 7 to 15 digits")
       .nullable()
       .optional(),
     image: z.string().trim().url().max(2048).nullable().optional(),
@@ -40,10 +45,11 @@ export async function PATCH(req: Request) {
     }
 
     const { name, phone, image, aiTone } = parsed.data;
+    const normalizedPhone = phone === "" ? null : phone;
 
     const updatedUser = await db.user.update({
       where: { id: user.id },
-      data: { name, phone, image, aiTone },
+      data: { name, phone: normalizedPhone, image, aiTone },
       select: {
         id: true,
         name: true,
