@@ -1,5 +1,6 @@
 "use client"
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useRouter } from 'next/navigation';
 import { IoNotifications } from "react-icons/io5";
 import NotificationSidebar from '../notification/notification';
 
@@ -7,14 +8,21 @@ import NotificationSidebar from '../notification/notification';
 interface Notification {
   id: string;
   isRead: boolean;
+  isDone?: boolean;
   message: string;
   type: string;
   createdAt: string;
+  buyerId?: string | null;
 }
 
 export default function NotificationBtn() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [pendingDoneIds, setPendingDoneIds] = useState<Set<string>>(new Set());
+  const [actionError, setActionError] = useState<string | null>(null);
+  // Ref mirrors pendingDoneIds so rapid double-clicks are blocked before a re-render.
+  const pendingDoneRef = useRef<Set<string>>(new Set());
 
   // 2. გამოვიყენოთ ტიპიზირებული filter
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -25,7 +33,13 @@ export default function NotificationBtn() {
       const res = await fetch('/api/notifications');
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data);
+        // Completion is final: never let a poll that raced a PATCH flip isDone back to false.
+        setNotifications(prev =>
+          data.map((n: Notification) => ({
+            ...n,
+            isDone: Boolean(n.isDone) || prev.some(p => p.id === n.id && p.isDone),
+          }))
+        );
       }
     } catch (err) {
       console.error("Fetch Notifications Error:", err);
@@ -59,6 +73,37 @@ export default function NotificationBtn() {
     }
   };
 
+  const markAsDone = async (id: string) => {
+    if (pendingDoneRef.current.has(id)) return;
+
+    pendingDoneRef.current.add(id);
+    setPendingDoneIds(new Set(pendingDoneRef.current));
+    setActionError(null);
+
+    try {
+      const res = await fetch(`/api/notifications/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isDone: true }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`PATCH failed with status ${res.status}`);
+      }
+
+      // Only isDone changes locally; isRead and all other fields are preserved.
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, isDone: true } : n)
+      );
+    } catch (err) {
+      console.error("PATCH_DONE_ERROR:", err);
+      setActionError("Could not mark notification as done. Please try again.");
+    } finally {
+      pendingDoneRef.current.delete(id);
+      setPendingDoneIds(new Set(pendingDoneRef.current));
+    }
+  };
+
   return (
     <>
       <div
@@ -88,6 +133,13 @@ export default function NotificationBtn() {
         onClose={() => setIsOpen(false)}
         notifications={notifications}
         onMarkRead={markAsRead}
+        onMarkDone={markAsDone}
+        pendingDoneIds={pendingDoneIds}
+        actionError={actionError}
+        onOpenBuyer={(buyerId) => {
+          setIsOpen(false);
+          router.push(`/buyers?buyerId=${encodeURIComponent(buyerId)}`);
+        }}
       />
     </>
   )

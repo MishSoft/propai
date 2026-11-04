@@ -2,6 +2,42 @@ import { NextResponse } from "next/server";
 import { handleApiError, requireAuth } from "@/lib/auth-helpers";
 import db from "@/lib/db";
 
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  let user: Awaited<ReturnType<typeof requireAuth>>;
+
+  try {
+    user = await requireAuth();
+  } catch (error) {
+    return handleApiError(error);
+  }
+
+  try {
+    const { id } = await params;
+    if (!id) {
+      return NextResponse.json({ error: "ID missing" }, { status: 400 });
+    }
+
+    const buyer = await db.buyer.findFirst({
+      where: { id, authorId: user.id },
+    });
+
+    if (!buyer) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(buyer, { status: 200 });
+  } catch (error) {
+    console.error("DETAILED_GET_BUYER_ERROR:", error);
+    return NextResponse.json(
+      { error: "სერვერული შეცდომა ძიებისას" },
+      { status: 500 },
+    );
+  }
+}
+
 export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },

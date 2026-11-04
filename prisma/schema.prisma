@@ -110,6 +110,7 @@ model Notification {
   type      String   @default("NEW_BUYER")
   message   String
   isRead    Boolean  @default(false)
+  isDone    Boolean  @default(false)
 
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

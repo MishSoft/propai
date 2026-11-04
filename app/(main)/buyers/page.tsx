@@ -1,15 +1,19 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { BuyerList } from "../components/BuyerList/BuyerList";
 import { BuyerModal } from "../components/BuyerModal/BuyerModal";
 import { Buyer } from '@/types/buyer';
 
-export default function BuyersPage() {
+function BuyersPageContent() {
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const buyerIdParam = searchParams.get('buyerId');
 
   useEffect(() => {
     const fetchBuyers = async () => {
@@ -26,9 +30,44 @@ export default function BuyersPage() {
     fetchBuyers();
   }, []);
 
+  useEffect(() => {
+    if (!buyerIdParam) return;
+
+    let ignore = false;
+    const openBuyerFromUrl = async () => {
+      try {
+        const res = await fetch(`/api/buyers/${encodeURIComponent(buyerIdParam)}`);
+        if (ignore) return;
+
+        if (!res.ok) {
+          // Missing, deleted, or not owned by the current user: drop the stale param.
+          router.replace('/buyers');
+          return;
+        }
+
+        const data = (await res.json()) as Buyer;
+        if (ignore) return;
+        setSelectedBuyer(data);
+        setIsModalOpen(true);
+      } catch (err) {
+        if (!ignore) console.error("Failed to fetch buyer from notification", err);
+      }
+    };
+    openBuyerFromUrl();
+
+    return () => {
+      ignore = true;
+    };
+  }, [buyerIdParam, router]);
+
   const handleViewDetails = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
     setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    if (buyerIdParam) router.replace('/buyers');
   };
 
   const handleDeleteBuyer = (id: string) => {
@@ -70,8 +109,16 @@ export default function BuyersPage() {
       <BuyerModal
         buyer={selectedBuyer}
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
       />
     </section>
+  );
+}
+
+export default function BuyersPage() {
+  return (
+    <Suspense fallback={null}>
+      <BuyersPageContent />
+    </Suspense>
   );
 }
