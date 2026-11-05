@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RiCloseLine } from "react-icons/ri";
+import { lockBodyScroll } from "@/lib/scroll-lock";
 import { useUiStore } from "@/store/useUiStore";
 import Logo from "./Logo";
 import SideLinks from "./SideLinks";
@@ -66,8 +67,7 @@ export default function SideBar() {
 
     openerRef.current = document.activeElement as HTMLElement | null;
 
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const unlockScroll = lockBodyScroll();
 
     const focusTimer = window.setTimeout(() => {
       closeButtonRef.current?.focus();
@@ -106,7 +106,7 @@ export default function SideBar() {
 
     return () => {
       window.clearTimeout(focusTimer);
-      document.body.style.overflow = originalOverflow;
+      unlockScroll();
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isSidebarOpen, isDesktop, dismiss]);

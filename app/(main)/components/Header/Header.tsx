@@ -33,7 +33,11 @@ export default function Header({ agentId }: HeaderProps) {
 
         {/* მარჯვენა მხარე: ღილაკები და ლინკი */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <NotificationBtn />
+          <div className="fixed md:relative bottom-8 right-6 md:bottom-auto md:right-auto z-50 md:z-auto">
+            <div className="flex flex-col md:flex-row items-center gap-3 bg-white md:bg-transparent p-3 md:p-0 rounded-2xl shadow-lg md:shadow-none border md:border-none border-gray-100">
+              <NotificationBtn />
+            </div>
+          </div>
           <ShareLink agentId={agentId} />
           <div className="h-10 w-px bg-gray-200 hidden sm:block"></div> {/* გამყოფი ხაზი */}
           <ExportData />
