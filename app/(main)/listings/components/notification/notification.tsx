@@ -6,14 +6,13 @@ interface NotificationSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   notifications: any[];
-  onMarkRead: (id: string) => void;
   onMarkDone: (id: string) => void;
   pendingDoneIds: Set<string>;
   actionError: string | null;
   onOpenBuyer: (buyerId: string) => void;
 }
 
-export default function NotificationSidebar({ isOpen, onClose, notifications, onMarkRead, onMarkDone, pendingDoneIds, actionError, onOpenBuyer }: NotificationSidebarProps) {
+export default function NotificationSidebar({ isOpen, onClose, notifications, onMarkDone, pendingDoneIds, actionError, onOpenBuyer }: NotificationSidebarProps) {
   if (!isOpen) return null;
 
   return (
@@ -53,7 +52,6 @@ export default function NotificationSidebar({ isOpen, onClose, notifications, on
               <NotificationItem
                 key={notif.id}
                 notification={notif}
-                onMarkRead={onMarkRead}
                 onMarkDone={onMarkDone}
                 isDonePending={pendingDoneIds.has(notif.id)}
                 onOpenBuyer={onOpenBuyer}

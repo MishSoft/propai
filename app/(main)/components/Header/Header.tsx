@@ -14,6 +14,8 @@ interface HeaderProps {
   agentId: string;
 }
 
+import NotificationBtn from '../../listings/components/Header/NotificationBtn';
+
 export default function Header({ agentId }: HeaderProps) {
   return (
     <header className="w-full pb-6 mb-6 border-b border-gray-100 flex flex-col gap-6">
@@ -31,6 +33,7 @@ export default function Header({ agentId }: HeaderProps) {
 
         {/* მარჯვენა მხარე: ღილაკები და ლინკი */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <NotificationBtn />
           <ShareLink agentId={agentId} />
           <div className="h-10 w-px bg-gray-200 hidden sm:block"></div> {/* გამყოფი ხაზი */}
           <ExportData />
