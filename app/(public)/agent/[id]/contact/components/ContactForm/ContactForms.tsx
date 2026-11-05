@@ -12,21 +12,24 @@ export default function ContactForm({ agentId }: { agentId: string }) {
     location: "",
     category: "Buy",
     propertyType: "Apartment",
-    floor: "1", // <-- სართული დაემატა სთეითში
+    floor: "1",
     minRooms: "1",
     minBaths: "1",
     budget: "",
     description: "",
   });
 
-  // სართულების ოპციები 1-დან 20-მდე
   const floorOptions = Array.from({ length: 20 }, (_, i) => ({
     label: (i + 1).toString(),
     value: (i + 1).toString(),
   }));
 
-  const handleChange = (e: any) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,7 +89,7 @@ export default function ContactForm({ agentId }: { agentId: string }) {
       <div className="grid grid-cols-3 gap-4">
         <FormInput label="მინ. ოთახი" name="minRooms" type="number" value={formData.minRooms} onChange={handleChange} />
         <FormInput label="მინ. სველი წერტილი" name="minBaths" type="number" value={formData.minBaths} onChange={handleChange} />
-        <FormInput label="ბიუჯეტი ($)" name="budget" type="number" value={formData.budget} onChange={handleChange} />
+        <FormInput label="ბიუჯეტი ($)" name="budget" type="number" value={formData.budget} onChange={handleChange} required />
       </div>
 
       <FormInput label="დამატებითი მოთხოვნები" name="description" type="textarea" placeholder="მაგ: დიდი აივანი, ხედი..." value={formData.description} onChange={handleChange} />
