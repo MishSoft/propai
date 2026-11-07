@@ -1,52 +1,35 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth, handleApiError } from "@/lib/auth-helpers";
+import { logger } from "@/lib/logger";
 
-// 1. BigInt სერიალიზაციის გლობალური ფიქსი (მნიშვნელოვანია!)
+// BigInt serialization global fix
 (BigInt.prototype as any).toJSON = function () {
   return Number(this);
 };
 
-interface CustomUser {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-  image?: string | null;
-  plan?: string;
-}
-
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "ავტორიზაცია საჭიროა" }, { status: 401 });
-    }
-
-    const user = session.user as CustomUser;
-    const userId = user.id;
-    const userPlan = (user.plan || "lite").toLowerCase();
-
+    const user = await requireAuth();
     const body = await req.json();
 
     const planLimits: Record<string, number> = {
       lite: 5,
       agent: 20,
       pro: 50,
+      ultimate: 100
     };
 
+    const userPlan = (user.plan || "lite").toLowerCase();
     const limit = planLimits[userPlan] || 5;
 
     const currentPostsCount = await db.post.count({
-      where: { authorId: userId },
+      where: { authorId: user.id },
     });
 
     if (currentPostsCount >= limit) {
-      return NextResponse.json(
-        { error: `თქვენ ამოწურეთ ლიმიტი (${limit} პოსტი). განაახლეთ პაკეტი.` },
-        { status: 403 }
-      );
+      logger.warn(`User ${user.id} reached post limit (${limit})`);
+      throw new Error(`Forbidden: You have reached your limit (${limit} posts). Upgrade your plan.`);
     }
 
     const {
@@ -64,7 +47,6 @@ export async function POST(req: Request) {
       floor
     } = body;
 
-    // უსაფრთხო გარდაქმნა და დამრგვალება (რომ 899999 არ ჩაიწეროს)
     const safePrice = Math.round(Number(price)) || 0;
     const safeBeds = Number(rooms) || 0;
     const safeBaths = Number(baths) || 0;
@@ -76,7 +58,7 @@ export async function POST(req: Request) {
         title: street || "No Title",
         city: city || "Unknown",
         street: street || "Unknown",
-        price: safePrice,
+        price: BigInt(safePrice),
         beds: safeBeds,
         baths: safeBaths,
         sqft: safeSqft,
@@ -87,7 +69,7 @@ export async function POST(req: Request) {
         description: description || "",
         images: images || [],
         author: {
-          connect: { id: userId }
+          connect: { id: user.id }
         }
       },
       include: {
@@ -102,24 +84,39 @@ export async function POST(req: Request) {
       }
     });
 
-    // BigInt პატჩის წყალობით, აქ ერორი აღარ მოხდება
+    logger.info(`New listing created: ${newPost.id} by user ${user.id}`);
     return NextResponse.json(newPost, { status: 201 });
 
   } catch (error) {
-    console.error("Listing POST Error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { error: "სერვერის შეცდომა: " + errorMessage },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
 export async function GET() {
   try {
+    const user = await requireAuth();
+
     const listings = await db.post.findMany({
+      where: { authorId: user.id },
       orderBy: { createdAt: 'desc' },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        images: true,
+        description: true,
+        city: true,
+        street: true,
+        price: true,
+        beds: true,
+        baths: true,
+        sqft: true,
+        floor: true,
+        category: true,
+        propertyType: true,
+        condition: true,
+        authorId: true,
+        createdAt: true,
+        updatedAt: true,
         author: {
           select: {
             name: true,
@@ -131,19 +128,8 @@ export async function GET() {
       }
     });
 
-    // BigInt პატჩი აქაც ავტომატურად იმუშავებს,
-    // მაგრამ ფასის Number-ად გარდაქმნა მაინც კარგი პრაქტიკაა frontend-ისთვის
-    const safeListings = listings.map(l => ({
-      ...l,
-      price: Number(l.price)
-    }));
-
-    return NextResponse.json(safeListings);
+    return NextResponse.json(listings, { status: 200 });
   } catch (error) {
-    console.error("GET Error:", error);
-    return NextResponse.json(
-      { error: "განცხადებების წამოღება ვერ მოხერხდა" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
