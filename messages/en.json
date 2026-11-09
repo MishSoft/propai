@@ -92,6 +92,13 @@
     "loading": "Loading...",
     "confirm_delete": "Are you sure you want to delete this?",
     "deleting": "Deleting...",
-    "close": "Close"
+    "close": "Close",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "confirming": "Working...",
+    "confirm_error": "The action could not be completed. Please try again.",
+    "dismiss": "Dismiss",
+    "network_error": "A connection error occurred. Please try again.",
+    "contact_submission_failed": "Your message could not be sent. Please try again."
   }
 }

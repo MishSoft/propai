@@ -5,6 +5,7 @@ import { getMessages } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';
 import { cookies } from 'next/headers';
 import { Providers } from "./(main)/components/Providers";
+import { ToastProvider } from '@/app/components/feedback/ToastProvider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +40,7 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <NextIntlClientProvider messages={messages} locale={locale}>
           <Providers>
-            {children}
+            <ToastProvider>{children}</ToastProvider>
           </Providers>
         </NextIntlClientProvider>
       </body>
