@@ -10,9 +10,10 @@ interface Props {
 
 export const FormInput = ({ label, name, type = "text", placeholder, required, value, onChange }: Props) => (
   <div className="flex flex-col gap-1.5 w-full">
-    <label className="text-sm font-medium text-gray-700">{label}</label>
+    <label htmlFor={name} className="text-sm font-medium text-gray-700">{label}</label>
     {type === "textarea" ? (
       <textarea
+        id={name}
         name={name}
         required={required}
         value={value}
@@ -22,6 +23,7 @@ export const FormInput = ({ label, name, type = "text", placeholder, required, v
       />
     ) : (
       <input
+        id={name}
         type={type}
         name={name}
         required={required}

@@ -1,9 +1,14 @@
 "use client";
 import { useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { FormInput } from "./FormInputs";
 import { FormSelect } from "./FormSelect";
+import { useToast } from "@/app/components/feedback/ToastProvider";
 
 export default function ContactForm({ agentId }: { agentId: string }) {
+  const t = useTranslations("ContactForm");
+  const locale = useLocale();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
@@ -32,6 +37,13 @@ export default function ContactForm({ agentId }: { agentId: string }) {
     }));
   };
 
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -43,9 +55,10 @@ export default function ContactForm({ agentId }: { agentId: string }) {
       });
 
       if (res.ok) setSuccess(true);
-      else alert("შეცდომა გაგზავნისას");
+      else toast.error(t("submission_failed"));
     } catch (err) {
       console.error(err);
+      toast.error(t("submission_failed"));
     } finally {
       setLoading(false);
     }
@@ -55,51 +68,54 @@ export default function ContactForm({ agentId }: { agentId: string }) {
     return (
       <div className="text-center py-10">
         <div className="text-green-500 text-5xl mb-4">✓</div>
-        <h2 className="text-2xl font-bold text-gray-800">მონაცემები გაიგზავნა!</h2>
-        <p className="text-gray-500 mt-2">მაკლერი მალე დაგიკავშირდებათ.</p>
+        <h2 className="text-2xl font-bold text-gray-800">{t("success_title")}</h2>
+        <p className="mt-2 text-gray-500">{t("success_message")}</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} lang={locale} className="flex flex-col gap-5">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormInput label="თქვენი სახელი" name="name" required value={formData.name} onChange={handleChange} />
-        <FormInput label="ტელეფონის ნომერი" name="phone" required value={formData.phone} onChange={handleChange} />
+        <FormInput label={t("name_label")} name="name" required value={formData.name} onChange={handleChange} />
+        <FormInput label={t("phone_label")} name="phone" required value={formData.phone} onChange={handleChange} />
       </div>
 
-      <FormInput label="სასურველი მდებარეობა" name="location" placeholder="მაგ: ვაკე, საბურთალო..." value={formData.location} onChange={handleChange} />
+      <FormInput label={t("location_label")} name="location" placeholder={t("location_placeholder")} value={formData.location} onChange={handleChange} />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <FormSelect
-          label="გარიგება" name="category" value={formData.category} onChange={handleChange}
-          options={[{ label: "ყიდვა", value: "Buy" }, { label: "ქირაობა", value: "Rent" }]}
+          label={t("category_label")} name="category" value={formData.category}
+          onChange={(value) => handleSelectChange("category", value)}
+          options={[{ label: t("buy"), value: "Buy" }, { label: t("rent"), value: "Rent" }]}
         />
         <FormSelect
-          label="ტიპი" name="propertyType" value={formData.propertyType} onChange={handleChange}
-          options={[{ label: "ბინა", value: "Apartment" }, { label: "სახლი", value: "House" }]}
+          label={t("property_type_label")} name="propertyType" value={formData.propertyType}
+          onChange={(value) => handleSelectChange("propertyType", value)}
+          options={[{ label: t("apartment"), value: "Apartment" }, { label: t("house"), value: "House" }]}
         />
         {/* სართულის არჩევანი */}
         <FormSelect
-          label="სართული" name="floor" value={formData.floor} onChange={handleChange}
+          label={t("floor_label")} name="floor" value={formData.floor}
+          onChange={(value) => handleSelectChange("floor", value)}
           options={floorOptions}
         />
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <FormInput label="მინ. ოთახი" name="minRooms" type="number" value={formData.minRooms} onChange={handleChange} />
-        <FormInput label="მინ. სველი წერტილი" name="minBaths" type="number" value={formData.minBaths} onChange={handleChange} />
-        <FormInput label="ბიუჯეტი ($)" name="budget" type="number" value={formData.budget} onChange={handleChange} required />
+        <FormInput label={t("min_rooms_label")} name="minRooms" type="number" value={formData.minRooms} onChange={handleChange} />
+        <FormInput label={t("min_baths_label")} name="minBaths" type="number" value={formData.minBaths} onChange={handleChange} />
+        <FormInput label={t("budget_label")} name="budget" type="number" value={formData.budget} onChange={handleChange} required />
       </div>
 
-      <FormInput label="დამატებითი მოთხოვნები" name="description" type="textarea" placeholder="მაგ: დიდი აივანი, ხედი..." value={formData.description} onChange={handleChange} />
+      <FormInput label={t("description_label")} name="description" type="textarea" placeholder={t("description_placeholder")} value={formData.description} onChange={handleChange} />
 
       <button
         type="submit"
         disabled={loading}
         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all disabled:bg-gray-400"
       >
-        {loading ? "იგზავნება..." : "მოთხოვნის გაგზავნა"}
+        {loading ? t("submitting") : t("submit")}
       </button>
     </form>
   );
