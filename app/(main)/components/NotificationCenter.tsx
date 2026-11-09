@@ -1,17 +1,17 @@
 "use client"
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { IoClose } from "react-icons/io5";
 import NotificationSidebar from '../listings/components/notification/notification';
 import { AppNotification, useNotificationStore } from '@/store/useNotificationStore';
+import NotificationMessage from '../listings/components/notification/NotificationMessage';
 
 const POLL_INTERVAL_MS = 15000;
 const TOAST_DURATION_MS = 6000;
 const MAX_TOASTS = 3;
 
-interface NotificationToast {
-  id: string;
-  message: string;
+interface NotificationToast extends Pick<AppNotification, 'id' | 'message' | 'type' | 'presentation'> {
   buyerId: string | null;
 }
 
@@ -20,7 +20,9 @@ interface NotificationToastItemProps extends NotificationToast {
   onDismiss: (id: string) => void;
 }
 
-function NotificationToastItem({ id, message, buyerId, onOpen, onDismiss }: NotificationToastItemProps) {
+function NotificationToastItem({ id, message, type, presentation, buyerId, onOpen, onDismiss }: NotificationToastItemProps) {
+  const t = useTranslations('Notifications');
+
   useEffect(() => {
     const timer = setTimeout(() => onDismiss(id), TOAST_DURATION_MS);
     return () => clearTimeout(timer);
@@ -28,8 +30,10 @@ function NotificationToastItem({ id, message, buyerId, onOpen, onDismiss }: Noti
 
   const content = (
     <>
-      <span className="block text-[11px] font-semibold uppercase tracking-wide text-purple-700">New notification</span>
-      <span className="mt-0.5 block wrap-break-word text-sm leading-5 text-slate-900">{message}</span>
+      <span className="block text-[11px] font-semibold uppercase tracking-wide text-purple-700">{t('new_notification')}</span>
+      <span className="mt-0.5 block wrap-break-word text-sm leading-5 text-slate-900">
+        <NotificationMessage notification={{ message, type, presentation }} />
+      </span>
     </>
   );
 
@@ -41,7 +45,7 @@ function NotificationToastItem({ id, message, buyerId, onOpen, onDismiss }: Noti
       {buyerId ? (
         <button
           type="button"
-          onClick={() => onOpen({ id, message, buyerId })}
+          onClick={() => onOpen({ id, message, type, presentation, buyerId })}
           className="min-w-0 flex-1 cursor-pointer rounded-md text-left transition-colors hover:text-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1"
         >
           {content}
@@ -52,7 +56,7 @@ function NotificationToastItem({ id, message, buyerId, onOpen, onDismiss }: Noti
       <button
         type="button"
         onClick={() => onDismiss(id)}
-        aria-label="Dismiss notification"
+        aria-label={t('dismiss_notification')}
         className="shrink-0 cursor-pointer rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1"
       >
         <IoClose size={16} aria-hidden="true" />
@@ -70,7 +74,7 @@ export default function NotificationCenter() {
 
   const [toasts, setToasts] = useState<NotificationToast[]>([]);
   const [pendingDoneIds, setPendingDoneIds] = useState<Set<string>>(new Set());
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState(false);
   // Ref mirrors pendingDoneIds so rapid double-clicks are blocked before a re-render.
   const pendingDoneRef = useRef<Set<string>>(new Set());
   // null until the first successful poll, so notifications present at load never toast.
@@ -121,7 +125,13 @@ export default function NotificationCenter() {
         fresh.forEach((n) => seen.add(n.id));
         setToasts((currentToasts) =>
           [
-            ...fresh.map((n) => ({ id: n.id, message: n.message, buyerId: n.buyerId ?? null })),
+            ...fresh.map((n) => ({
+              id: n.id,
+              message: n.message,
+              type: n.type,
+              presentation: n.presentation,
+              buyerId: n.buyerId ?? null,
+            })),
             ...currentToasts,
           ].slice(0, MAX_TOASTS)
         );
@@ -157,7 +167,7 @@ export default function NotificationCenter() {
 
     pendingDoneRef.current.add(id);
     setPendingDoneIds(new Set(pendingDoneRef.current));
-    setActionError(null);
+    setActionError(false);
 
     try {
       const res = await fetch(`/api/notifications/${id}`, {
@@ -178,7 +188,7 @@ export default function NotificationCenter() {
       );
     } catch (err) {
       console.error("PATCH_DONE_ERROR:", err);
-      setActionError("Could not mark notification as done. Please try again.");
+      setActionError(true);
     } finally {
       pendingDoneRef.current.delete(id);
       setPendingDoneIds(new Set(pendingDoneRef.current));

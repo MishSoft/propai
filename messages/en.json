@@ -17,6 +17,22 @@
     "new_listing": "New Listing",
     "no_activity": "No recent activity"
   },
+  "Notifications": {
+    "title": "Notifications",
+    "empty_state": "No notifications",
+    "done": "Done",
+    "pending": "Pending",
+    "mark_as_done": "Mark as done",
+    "saving": "Saving...",
+    "close": "Close notifications",
+    "dismiss_notification": "Dismiss notification",
+    "new_notification": "New notification",
+    "mark_done_error": "Could not mark notification as done. Please try again.",
+    "button_label": "Notifications",
+    "button_label_count": "Notifications, {count} not done",
+    "new_buyer_buy": "New buyer: {name} is interested in buying.",
+    "new_buyer_rent": "New buyer: {name} is interested in renting."
+  },
   "Listings": {
     "page_title": "Property Listings",
     "page_subtitle": "Manage your active portfolio and AI-generated content.",

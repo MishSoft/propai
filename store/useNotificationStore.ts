@@ -1,5 +1,11 @@
 import { create } from "zustand"
 
+export interface NewBuyerNotificationPresentation {
+  type: "NEW_BUYER";
+  buyerName: string;
+  category: "Buy" | "Rent";
+}
+
 export interface AppNotification {
   id: string;
   isRead: boolean;
@@ -8,6 +14,7 @@ export interface AppNotification {
   type: string;
   createdAt: string;
   buyerId?: string | null;
+  presentation?: NewBuyerNotificationPresentation;
 }
 
 interface NotificationStoreProps {

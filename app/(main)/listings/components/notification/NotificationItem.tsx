@@ -1,6 +1,8 @@
 import React from 'react'
 import { IoCheckmarkCircle, IoMailUnreadOutline } from "react-icons/io5";
+import { useLocale, useTranslations } from 'next-intl';
 import type { AppNotification } from '@/store/useNotificationStore';
+import NotificationMessage from './NotificationMessage';
 
 interface NotificationItemProps {
   notification: AppNotification;
@@ -10,6 +12,8 @@ interface NotificationItemProps {
 }
 
 export default function NotificationItem({ notification, onMarkDone, isDonePending, onOpenBuyer }: NotificationItemProps) {
+  const locale = useLocale();
+  const t = useTranslations('Notifications');
   const handleClick = () => {
     if (notification.buyerId) {
       onOpenBuyer(notification.buyerId);
@@ -50,10 +54,10 @@ export default function NotificationItem({ notification, onMarkDone, isDonePendi
               isDone ? 'bg-emerald-600' : 'bg-purple-600'
             }`}
           >
-            {isDone ? 'Done' : 'Pending'}
+            {isDone ? t('done') : t('pending')}
           </span>
           <span className='text-[11px] text-slate-500'>
-            {new Date(notification.createdAt).toLocaleDateString('ka-GE')}
+            {new Date(notification.createdAt).toLocaleDateString(locale)}
           </span>
         </div>
 
@@ -64,7 +68,7 @@ export default function NotificationItem({ notification, onMarkDone, isDonePendi
               : 'font-semibold text-slate-900'
           }`}
         >
-          {notification.message}
+          <NotificationMessage notification={notification} />
         </p>
 
         {/* stopPropagation keeps these controls from triggering the row's BuyerModal navigation */}
@@ -82,7 +86,7 @@ export default function NotificationItem({ notification, onMarkDone, isDonePendi
               }}
               className='inline-flex cursor-pointer items-center rounded-md border border-emerald-200 bg-white px-2 py-1 text-[11px] font-medium text-emerald-700 transition-colors hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60'
             >
-              {isDonePending ? 'Saving…' : 'Mark as done'}
+              {isDonePending ? t('saving') : t('mark_as_done')}
             </button>
           </div>
         )}

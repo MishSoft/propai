@@ -1,22 +1,27 @@
 "use client"
 import React from 'react'
 import { IoNotifications } from "react-icons/io5";
+import { useTranslations } from 'next-intl';
 import { useNotificationStore } from '@/store/useNotificationStore';
 
 // Presentational bell: polling, drawer, and toasts live in NotificationCenter (mounted once in the (main) layout).
 export default function NotificationBtn() {
+  const t = useTranslations('Notifications');
   const undoneCount = useNotificationStore((state) =>
     state.notifications.reduce((count, n) => (n.isDone ? count : count + 1), 0)
   );
   const openNotifications = useNotificationStore((state) => state.openNotifications);
 
-  const label = undoneCount > 0 ? `Notifications, ${undoneCount} not done` : 'Notifications';
+  const label = undoneCount > 0
+    ? t('button_label_count', { count: undoneCount })
+    : t('button_label');
 
   return (
     <button
       type='button'
       onClick={openNotifications}
       aria-label={label}
+      title={label}
       className='relative group p-2.5 bg-white border border-gray-100 flex items-center justify-center rounded-xl shadow-sm hover:bg-gray-50 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1'
     >
       <IoNotifications
