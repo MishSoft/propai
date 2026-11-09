@@ -2,9 +2,11 @@
 import React, { useState } from 'react'
 import { IoSearchOutline } from "react-icons/io5";
 import { IoCloseCircleOutline } from "react-icons/io5";
+import { useTranslations } from 'next-intl';
 
 export default function Search() {
   const [query, setQuery] = useState('');
+  const t = useTranslations('Listings');
 
   return (
     <section className="w-full max-w-md">
@@ -17,7 +19,7 @@ export default function Search() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search listings, buyers or locations..."
+          placeholder={t('search_placeholder')}
           className="w-full pl-12 pr-10 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:border-purple-400 focus:ring-4 focus:ring-purple-50 transition-all text-sm font-medium text-slate-600 placeholder:text-slate-400 shadow-sm"
         />
 

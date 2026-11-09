@@ -14,9 +14,11 @@ interface HeaderProps {
   agentId: string;
 }
 
+import { useTranslations } from 'next-intl';
 import NotificationBtn from '../../listings/components/Header/NotificationBtn';
 
 export default function Header({ agentId }: HeaderProps) {
+  const t = useTranslations('Dashboard');
   return (
     <header className="w-full pb-6 mb-6 border-b border-gray-100 flex flex-col gap-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -24,10 +26,10 @@ export default function Header({ agentId }: HeaderProps) {
         {/* მარცხენა მხარე: ტექსტი */}
         <div className="flex flex-col gap-1">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
-            Agent Dashboard
+            {t('welcome')}
           </h2>
           <p className="text-gray-500 text-sm md:text-base max-w-lg">
-            Your business at a glance. Manage listings and AI workflows.
+            {t('tagline')}
           </p>
         </div>
 

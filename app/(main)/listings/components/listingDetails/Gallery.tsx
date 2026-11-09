@@ -43,7 +43,7 @@ export default function Gallery({ images }: GalleryProps) {
               <div className="relative w-full h-full">
                 <Image
                   src={img}
-                  alt={`Property image ${idx + 1}`}
+                  alt={t('property_image_alt', { number: idx + 1 })}
                   fill
                   priority={idx === 0}
                   className="object-cover"
@@ -92,7 +92,7 @@ export default function Gallery({ images }: GalleryProps) {
                 <div className="thumb-inner relative h-full rounded-xl overflow-hidden border-2 border-transparent opacity-60 transition-all">
                   <Image
                     src={img}
-                    alt="thumb"
+                    alt=""
                     fill
                     className="object-cover"
                   />

@@ -15,7 +15,19 @@
     "notificationsCount": "New Notifications",
     "activity_feed": "Activity Feed",
     "new_listing": "New Listing",
-    "no_activity": "No recent activity"
+    "no_activity": "No recent activity",
+    "total_value": "Total Value",
+    "tagline": "Manage your properties and clients with AI-powered precision.",
+    "quick_actions": "Quick Actions",
+    "ai_agent_bio": "AI Agent Bio",
+    "ai_agent_bio_description": "Refresh your professional bio with an AI model tailored to real estate.",
+    "generate_bio": "Generate Bio",
+    "public_link": "Public Link",
+    "share_with_clients": "Share with clients",
+    "copy_invite_link": "Copy Invite Link",
+    "copied": "Copied!",
+    "export_data": "Export Data",
+    "listing_card_description": "Launch a new property listing with AI-generated content."
   },
   "Notifications": {
     "title": "Notifications",

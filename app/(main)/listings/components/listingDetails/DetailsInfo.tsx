@@ -30,7 +30,7 @@ export default function DetailsInfo({ item, isPublic = false }: { item: ListingT
       <div className="mb-6 shrink-0 md:shrink md:min-h-0 md:flex-1 flex flex-col">
         <div className="flex items-center justify-between mb-2 shrink-0">
           <h4 className="text-slate-900 font-bold flex items-center gap-2 text-[10px] uppercase tracking-widest">
-            <FaWandMagicSparkles className="text-purple-500" /> AI Description
+            <FaWandMagicSparkles className="text-purple-500" /> {t('ai_description')}
           </h4>
         </div>
 
@@ -44,7 +44,7 @@ export default function DetailsInfo({ item, isPublic = false }: { item: ListingT
       {!isPublic && (
         <div className="bg-slate-50 p-4 md:p-6 rounded-4xl border border-slate-100 space-y-4 shrink-0 shadow-sm">
           <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">
-            Marketing Toolkit
+            {t('marketing_toolkit')}
           </h4>
 
           <div className="grid grid-cols-1 gap-2">
@@ -54,7 +54,7 @@ export default function DetailsInfo({ item, isPublic = false }: { item: ListingT
             >
               <div className="flex items-center gap-2 text-slate-700 font-bold uppercase tracking-tighter">
                 <FaCopy className="text-slate-400 group-hover:text-purple-500" size={12} />
-                Copy Link
+                {t('copy_link')}
               </div>
               {copiedSection === 'listing' && <FaCheck className="text-emerald-500" />}
             </button>
@@ -65,7 +65,7 @@ export default function DetailsInfo({ item, isPublic = false }: { item: ListingT
             >
               <div className="flex items-center gap-2 text-slate-700 font-bold uppercase tracking-tighter">
                 <FaUserTie className="text-slate-400 group-hover:text-purple-500" size={12} />
-                My Portfolio
+                {t('my_portfolio')}
               </div>
               {copiedSection === 'portfolio' && <FaCheck className="text-emerald-500" />}
             </button>

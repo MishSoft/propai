@@ -8,9 +8,11 @@ import { MdOutlinePriceChange } from "react-icons/md";
 import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { getServerSession } from 'next-auth';
+import { getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 
 export default async function Hero() {
+  const t = await getTranslations('Dashboard');
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user) {
@@ -37,19 +39,19 @@ export default async function Hero() {
   return (
     <section className='my-10 grid md:grid-cols-2 xl:grid-cols-3 items-center gap-6'>
       <HeroCards
-        title="Total Listings"
+        title={t('listingsCount')}
         icon={FaBuilding}
         number={listingsCount}
         increment="+2"
       />
       <HeroCards
-        title="Total Buyers"
+        title={t('buyersCount')}
         icon={IoPeopleSharp}
         number={buyersCount}
         increment="+2"
       />
       <HeroCards
-        title="Total Value"
+        title={t('total_value')}
         icon={MdOutlinePriceChange}
         increment="+2"
         priceValue={Math.round(totalNumber).toLocaleString() + "$"}

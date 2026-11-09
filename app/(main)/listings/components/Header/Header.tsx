@@ -1,16 +1,19 @@
 import React from 'react'
 import NotificationBtn from './NotificationBtn'
 import AddListing from '../AddListing/AddListing'
+import { useTranslations } from 'next-intl'
 
 export default function Header() {
+  const t = useTranslations('Listings')
+
   return (
     <header className="flex items-center justify-between w-full  bg-transparent">
       <div className="flex flex-col gap-1">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-          Property Listings
+          {t('page_title')}
         </h2>
         <p className="text-sm md:text-base text-gray-500 font-medium">
-          Manage your active portfolio and AI-generated content.
+          {t('page_subtitle')}
         </p>
       </div>
 

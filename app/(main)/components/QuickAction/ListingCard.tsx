@@ -3,10 +3,13 @@ import { useUiStore } from '@/store/useUiStore';
 import { useRouter } from 'next/navigation';
 import React from 'react'
 import { FaBuildingUser } from "react-icons/fa6";
+import { useTranslations } from 'next-intl';
 
 export default function ListingCard() {
   const {toggleListingModal} = useUiStore()
   const router = useRouter()
+  const t = useTranslations('Listings');
+  const dashboardT = useTranslations('Dashboard');
   const handleListingClick = () => {
     toggleListingModal();
     router.push('/listings');
@@ -20,14 +23,14 @@ export default function ListingCard() {
       </div>
 
       <div className='flex flex-col gap-2'>
-        <h2 className='text-xl font-bold text-gray-900'>New Listing</h2>
+        <h2 className='text-xl font-bold text-gray-900'>{t('addNew')}</h2>
         <p className='text-gray-500 text-sm leading-relaxed'>
-          Launch a new property listing with automated AI content generation.
+          {dashboardT('listing_card_description')}
         </p>
       </div>
 
       <button onClick={handleListingClick} className='w-full py-3 px-4 font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors duration-200 shadow-sm active:scale-[0.98]'>
-        Create Listing
+        {t('addNew')}
       </button>
 
     </div>
