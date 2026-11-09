@@ -2,6 +2,7 @@
 import React, { useId } from 'react'
 import { useTranslations } from 'next-intl'
 import { IoCloseOutline } from 'react-icons/io5'
+import * as Select from '@radix-ui/react-select'
 import {
   ListingFilters,
   getActiveFilterChips,
@@ -18,12 +19,22 @@ interface FilterProps {
 
 const CONTROL_CLASS = 'w-full min-w-0 px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 aria-[invalid=true]:border-rose-500 transition-all text-sm font-black text-slate-900 placeholder:text-slate-400 placeholder:font-bold shadow-xl shadow-slate-200/50';
 const LABEL_CLASS = 'block mb-1.5 ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400';
+const SELECT_TRIGGER_CLASS = 'group/trigger relative inline-flex min-h-[50px] w-full min-w-0 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-black text-slate-900 shadow-xl shadow-slate-200/50 outline-none transition-all hover:border-purple-300 focus-visible:border-purple-600 focus-visible:ring-4 focus-visible:ring-purple-600/10 data-[state=open]:border-purple-400 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50';
+const SELECT_CONTENT_CLASS = 'z-[1300] max-h-[var(--radix-select-content-available-height)] w-[var(--radix-select-trigger-width)] overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 p-1.5 text-slate-700 shadow-2xl shadow-slate-900/15 backdrop-blur-xl data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 duration-150 ease-out';
+
+function getAllOptionValue(options: string[]): string {
+  let value = '__all__';
+  while (options.includes(value)) value = `_${value}`;
+  return value;
+}
 
 export default function Filter({ filters, cityOptions, streetOptions, onChange, onClearAll }: FilterProps) {
   const t = useTranslations('Listings');
   const id = useId();
   const invalidRange = isPriceRangeInvalid(filters);
   const chips = getActiveFilterChips(filters);
+  const allCitiesValue = getAllOptionValue(cityOptions);
+  const allStreetsValue = getAllOptionValue(streetOptions);
 
   return (
     <section
@@ -32,33 +43,119 @@ export default function Filter({ filters, cityOptions, streetOptions, onChange, 
     >
       <div className='grid grid-cols-2 gap-3 sm:grid-cols-4'>
         <div className='col-span-2 sm:col-span-1 min-w-0'>
-          <label htmlFor={`${id}-city`} className={LABEL_CLASS}>{t('filter_city')}</label>
-          <select
-            id={`${id}-city`}
-            value={filters.city}
-            onChange={(e) => onChange({ city: e.target.value })}
-            className={CONTROL_CLASS}
+          <label id={`${id}-city-label`} htmlFor={`${id}-city`} className={LABEL_CLASS}>{t('filter_city')}</label>
+          <Select.Root
+            value={filters.city || allCitiesValue}
+            onValueChange={(value) => onChange({ city: value === allCitiesValue ? '' : value })}
           >
-            <option value=''>{t('filter_all_cities')}</option>
-            {cityOptions.map((city) => (
-              <option key={city} value={city}>{city}</option>
-            ))}
-          </select>
+            <Select.Trigger
+              id={`${id}-city`}
+              aria-labelledby={`${id}-city-label`}
+              className={SELECT_TRIGGER_CLASS}
+            >
+              <Select.Value />
+              <Select.Icon aria-hidden='true' className='shrink-0 text-slate-400 transition-transform duration-200 group-data-[state=open]/trigger:rotate-180'>
+                <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='m19 9-7 7-7-7' />
+                </svg>
+              </Select.Icon>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Content
+                position='popper'
+                align='start'
+                sideOffset={6}
+                collisionPadding={8}
+                className={SELECT_CONTENT_CLASS}
+              >
+                <Select.Viewport className='max-h-[var(--radix-select-content-available-height)] overflow-y-auto overscroll-contain p-1'>
+                  <Select.Item
+                    value={allCitiesValue}
+                    className='relative flex min-h-11 w-full cursor-pointer select-none items-center rounded-xl py-2 pl-3 pr-9 text-sm font-semibold outline-none transition-colors data-[highlighted]:bg-purple-50 data-[highlighted]:text-purple-800 data-[state=checked]:text-purple-700 data-[disabled]:pointer-events-none data-[disabled]:opacity-50'
+                  >
+                    <Select.ItemText>{t('filter_all_cities')}</Select.ItemText>
+                    <Select.ItemIndicator className='absolute right-3 inline-flex items-center text-purple-700'>
+                      <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24' aria-hidden='true'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='m5 12 4 4L19 6' />
+                      </svg>
+                    </Select.ItemIndicator>
+                  </Select.Item>
+                  {cityOptions.map((city) => (
+                    <Select.Item
+                      key={city}
+                      value={city}
+                      className='relative flex min-h-11 w-full cursor-pointer select-none items-center rounded-xl py-2 pl-3 pr-9 text-sm font-semibold outline-none transition-colors data-[highlighted]:bg-purple-50 data-[highlighted]:text-purple-800 data-[state=checked]:text-purple-700 data-[disabled]:pointer-events-none data-[disabled]:opacity-50'
+                    >
+                      <Select.ItemText>{city}</Select.ItemText>
+                      <Select.ItemIndicator className='absolute right-3 inline-flex items-center text-purple-700'>
+                        <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24' aria-hidden='true'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='m5 12 4 4L19 6' />
+                        </svg>
+                      </Select.ItemIndicator>
+                    </Select.Item>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
         </div>
 
         <div className='col-span-2 sm:col-span-1 min-w-0'>
-          <label htmlFor={`${id}-street`} className={LABEL_CLASS}>{t('filter_street')}</label>
-          <select
-            id={`${id}-street`}
-            value={filters.street}
-            onChange={(e) => onChange({ street: e.target.value })}
-            className={CONTROL_CLASS}
+          <label id={`${id}-street-label`} htmlFor={`${id}-street`} className={LABEL_CLASS}>{t('filter_street')}</label>
+          <Select.Root
+            value={filters.street || allStreetsValue}
+            onValueChange={(value) => onChange({ street: value === allStreetsValue ? '' : value })}
           >
-            <option value=''>{t('filter_all_streets')}</option>
-            {streetOptions.map((street) => (
-              <option key={street} value={street}>{street}</option>
-            ))}
-          </select>
+            <Select.Trigger
+              id={`${id}-street`}
+              aria-labelledby={`${id}-street-label`}
+              className={SELECT_TRIGGER_CLASS}
+            >
+              <Select.Value />
+              <Select.Icon aria-hidden='true' className='shrink-0 text-slate-400 transition-transform duration-200 group-data-[state=open]/trigger:rotate-180'>
+                <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='m19 9-7 7-7-7' />
+                </svg>
+              </Select.Icon>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Content
+                position='popper'
+                align='start'
+                sideOffset={6}
+                collisionPadding={8}
+                className={SELECT_CONTENT_CLASS}
+              >
+                <Select.Viewport className='max-h-[var(--radix-select-content-available-height)] overflow-y-auto overscroll-contain p-1'>
+                  <Select.Item
+                    value={allStreetsValue}
+                    className='relative flex min-h-11 w-full cursor-pointer select-none items-center rounded-xl py-2 pl-3 pr-9 text-sm font-semibold outline-none transition-colors data-[highlighted]:bg-purple-50 data-[highlighted]:text-purple-800 data-[state=checked]:text-purple-700 data-[disabled]:pointer-events-none data-[disabled]:opacity-50'
+                  >
+                    <Select.ItemText>{t('filter_all_streets')}</Select.ItemText>
+                    <Select.ItemIndicator className='absolute right-3 inline-flex items-center text-purple-700'>
+                      <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24' aria-hidden='true'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='m5 12 4 4L19 6' />
+                      </svg>
+                    </Select.ItemIndicator>
+                  </Select.Item>
+                  {streetOptions.map((street) => (
+                    <Select.Item
+                      key={street}
+                      value={street}
+                      className='relative flex min-h-11 w-full cursor-pointer select-none items-center rounded-xl py-2 pl-3 pr-9 text-sm font-semibold outline-none transition-colors data-[highlighted]:bg-purple-50 data-[highlighted]:text-purple-800 data-[state=checked]:text-purple-700 data-[disabled]:pointer-events-none data-[disabled]:opacity-50'
+                    >
+                      <Select.ItemText>{street}</Select.ItemText>
+                      <Select.ItemIndicator className='absolute right-3 inline-flex items-center text-purple-700'>
+                        <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24' aria-hidden='true'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='m5 12 4 4L19 6' />
+                        </svg>
+                      </Select.ItemIndicator>
+                    </Select.Item>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
         </div>
 
         <div className='min-w-0'>

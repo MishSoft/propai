@@ -1,5 +1,5 @@
 "use client"
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Header from './components/Header/Header'
 import Filter from './components/Filter/Filter'
 import {
@@ -27,6 +27,8 @@ export default function Page() {
   const common = useTranslations('Common');
 
   const [listings, setListings] = useState<ListingType[]>([]);
+  const createdListingsRef = useRef<ListingType[]>([]);
+  const deletedListingIdsRef = useRef<Set<string>>(new Set());
   const [status, setStatus] = useState<ListingsStatus>('loading');
   const [filters, setFilters] = useState<ListingFilters>(EMPTY_LISTING_FILTERS);
 
@@ -46,6 +48,20 @@ export default function Page() {
   }, [listings]);
 
   const clearFilters = useCallback(() => setFilters(EMPTY_LISTING_FILTERS), []);
+  const handleListingDeleted = useCallback((id: string) => {
+    deletedListingIdsRef.current.add(id);
+    createdListingsRef.current = createdListingsRef.current.filter((listing) => listing.id !== id);
+    setListings((current) => current.filter((listing) => listing.id !== id));
+  }, []);
+  const handleListingCreated = useCallback((listing: ListingType) => {
+    deletedListingIdsRef.current.delete(listing.id);
+    createdListingsRef.current = [
+      listing,
+      ...createdListingsRef.current.filter((current) => current.id !== listing.id),
+    ];
+    setListings((current) => [listing, ...current.filter((current) => current.id !== listing.id)]);
+    setStatus('ready');
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -61,12 +77,21 @@ export default function Page() {
           throw new Error("Listings response is not an array");
         }
         if (!ignore) {
-          setListings(data as ListingType[]);
+          const fetchedListings = data as ListingType[];
+          const locallyCreatedIds = new Set(createdListingsRef.current.map((listing) => listing.id));
+          setListings([
+            ...createdListingsRef.current,
+            ...fetchedListings.filter(
+              (listing) =>
+                !locallyCreatedIds.has(listing.id) &&
+                !deletedListingIdsRef.current.has(listing.id),
+            ),
+          ]);
           setStatus('ready');
         }
       } catch (error) {
         console.error("Error fetching listings:", error);
-        if (!ignore) {
+        if (!ignore && createdListingsRef.current.length === 0 && deletedListingIdsRef.current.size === 0) {
           setStatus('error');
         }
       }
@@ -121,7 +146,7 @@ export default function Page() {
           <div className='w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 pb-32'>
             {filteredListings.map((item) => (
               <div key={item.id} className="flex justify-center min-w-0">
-                <ListingItem item={item} />
+                <ListingItem item={item} onDeleted={handleListingDeleted} />
               </div>
             ))}
           </div>
@@ -130,7 +155,7 @@ export default function Page() {
 
 
       {/* მოდალები */}
-      {isModalOpen && <Listing />}
+      {isModalOpen && <Listing onCreated={handleListingCreated} />}
       {isDetailsOpen && <ListingDetails />}
     </section>
   )

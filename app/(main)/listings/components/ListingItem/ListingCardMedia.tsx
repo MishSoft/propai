@@ -35,8 +35,13 @@ export default function ListingCardMedia({
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
-  const isSale = category === "Buy" || category === "Sale";
-  const label = isSale ? t('for_sale') : t('for_rent');
+  const normalizedCategory = category.trim().toLowerCase();
+  const label =
+    normalizedCategory === "buy" || normalizedCategory === "sale"
+      ? t('for_sale')
+      : normalizedCategory === "rent"
+        ? t('for_rent')
+        : null;
 
   return (
     <div className='relative h-64 overflow-hidden bg-slate-100 shrink-0'>
@@ -76,9 +81,11 @@ export default function ListingCardMedia({
       )}
 
       {/* დინამიკური Label */}
-      <div className='absolute top-4 left-4 bg-purple-600 text-white px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest z-10 shadow-lg shadow-purple-600/20'>
-        {label}
-      </div>
+      {label && (
+        <div className='absolute top-4 left-4 bg-purple-600 text-white px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest z-10 shadow-lg shadow-purple-600/20'>
+          {label}
+        </div>
+      )}
     </div>
   );
 }

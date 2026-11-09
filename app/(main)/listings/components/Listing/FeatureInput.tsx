@@ -18,6 +18,7 @@ export default function FeatureInput({ id, label, icon, placeholder = "0" }: Fea
         required
         id={id}
         type="number"
+        aria-label={label}
         placeholder={placeholder}
         className='w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-purple-400 text-center font-black text-slate-700 transition-all focus:bg-white'
       />
