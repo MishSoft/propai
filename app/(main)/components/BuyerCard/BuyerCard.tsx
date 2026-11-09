@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   IoCallOutline,
   IoLocationOutline,
@@ -10,6 +10,8 @@ import {
 } from "react-icons/io5";
 import { Buyer } from "@/types/buyer";
 import { useTranslations } from 'next-intl';
+import { ConfirmDialog } from '@/app/components/feedback/ConfirmDialog';
+import { useToast } from '@/app/components/feedback/ToastProvider';
 
 interface BuyerCardProps {
   buyer: Buyer;
@@ -19,38 +21,55 @@ interface BuyerCardProps {
 
 export const BuyerCard: React.FC<BuyerCardProps> = ({ buyer, onViewDetails, onDelete }) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const deleteInFlightRef = useRef(false);
   const t = useTranslations('Buyers');
   const common = useTranslations('Common');
+  const toast = useToast();
 
-  const handleDelete = async (e: React.MouseEvent) => {
+  const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (deleteInFlightRef.current) return;
+    setIsDeleteDialogOpen(true);
+  };
 
-    if (!window.confirm(common('confirm_delete'))) return;
+  const confirmDelete = async () => {
+    if (deleteInFlightRef.current) return;
 
+    deleteInFlightRef.current = true;
     setIsDeleting(true);
+    let deleted = false;
     try {
       const res = await fetch(`/api/buyers/${buyer.id}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
+        deleted = true;
+        setIsDeleteDialogOpen(false);
         if (onDelete) onDelete(buyer.id);
+        toast.success(t("delete_success"));
       } else {
         const data = await res.json();
-        alert(data.error || "წაშლა ვერ მოხერხდა");
+        toast.error(data.error || t("delete_error"));
       }
     } catch (err) {
       console.error("Delete error:", err);
-      alert("სერვერთან კავშირი ვერ დამყარდა");
+      toast.error(common("network_error"));
     } finally {
-      setIsDeleting(false);
+      deleteInFlightRef.current = false;
+      if (!deleted) {
+        setIsDeleting(false);
+        setIsDeleteDialogOpen(false);
+      }
     }
   };
 
   const isSale = buyer.category === "Sale" || buyer.category === "Buy";
 
   return (
-    <div className="glass-card flex flex-col justify-between p-4 sm:p-6 transition-all duration-300 relative overflow-hidden group hover:scale-[1.02] cursor-default bg-white/90 shadow-2xl shadow-slate-200/50 border-slate-100">
+    <>
+      <div className="glass-card flex flex-col justify-between p-4 sm:p-6 transition-all duration-300 relative overflow-hidden group hover:scale-[1.02] cursor-default bg-white/90 shadow-2xl shadow-slate-200/50 border-slate-100">
 
       {/* Category Badge */}
       <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 text-[10px] font-black px-2.5 py-1.5 rounded-xl uppercase tracking-widest shadow-sm ${
@@ -108,6 +127,15 @@ export const BuyerCard: React.FC<BuyerCardProps> = ({ buyer, onViewDetails, onDe
           {isDeleting ? common('saving') : (t('delete') || 'Delete')}
         </button>
       </div>
-    </div>
+      </div>
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        title={common('confirm_delete')}
+        description={`${buyer.name}, ${buyer.location}`}
+        variant="destructive"
+        onConfirm={confirmDelete}
+        onCancel={() => setIsDeleteDialogOpen(false)}
+      />
+    </>
   );
 };

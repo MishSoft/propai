@@ -96,28 +96,22 @@ function BuyersPageContent() {
                 {t('title')}
               </h1>
               <p className="min-h-4 text-slate-500 text-xs sm:text-sm font-bold uppercase tracking-wide opacity-70">
-                {`Found ${buyers.length} active clients`}
+                {t('active_clients_count', { count: buyers.length })}
               </p>
             </>
           )}
         </div>
       </header>
 
-      <div className="w-full glass-card overflow-hidden bg-white/90 border-slate-100 shadow-2xl shadow-slate-200/50">
-        <div className="overflow-x-auto custom-scrollbar">
-          {loading ? (
-            <div className="p-4 sm:p-6">
-              <BuyerListSkeleton label={common('loading')} />
-            </div>
-          ) : (
-            <BuyerList
-              buyers={buyers}
-              onViewDetails={handleViewDetails}
-              onDelete={handleDeleteBuyer}
-            />
-          )}
-        </div>
-      </div>
+      {loading ? (
+        <BuyerListSkeleton label={common('loading')} />
+      ) : (
+        <BuyerList
+          buyers={buyers}
+          onViewDetails={handleViewDetails}
+          onDelete={handleDeleteBuyer}
+        />
+      )}
 
       <BuyerModal
         buyer={selectedBuyer}

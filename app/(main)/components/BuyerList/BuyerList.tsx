@@ -18,8 +18,8 @@ export const BuyerList: React.FC<BuyerListProps> = ({ buyers, onViewDetails, onD
     return (
       <div className="glass-card px-6 py-12 sm:py-24 text-center w-full border-dashed border-slate-200 bg-white/90 shadow-2xl shadow-slate-200/50">
         <div className="max-w-xs mx-auto">
-          <p className="text-slate-900 font-black tracking-tighter uppercase text-lg">List is empty</p>
-          <p className="text-slate-500 text-sm mt-2 font-medium tracking-tight">New requests from potential clients will appear here</p>
+          <p className="text-slate-900 font-black tracking-tighter uppercase text-lg">{t('empty_title')}</p>
+          <p className="text-slate-500 text-sm mt-2 font-medium tracking-tight">{t('empty_description')}</p>
         </div>
       </div>
     );
