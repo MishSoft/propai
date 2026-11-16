@@ -10,4 +10,6 @@ export interface UserSettings {
   role: string;
   aiTone?: "friendly" | "professional" | "luxury";
   bio?: string;
+  hasLocalPassword: boolean;
+  authProviders: string[];
 }

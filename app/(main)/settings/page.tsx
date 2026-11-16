@@ -16,7 +16,13 @@ export default async function SettingsPage() {
 
   const dbUser = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { name: true, phone: true, image: true, aiTone: true },
+    select: {
+      name: true, phone: true, image: true, aiTone: true, password: true, accounts: {
+        select: {
+          provider: true
+        }
+      }
+    },
   });
   const aiTone = isAiTone(dbUser?.aiTone) ? dbUser.aiTone : DEFAULT_AI_TONE;
   const freshUser = {
@@ -25,6 +31,8 @@ export default async function SettingsPage() {
     phone: dbUser?.phone ?? null,
     image: dbUser?.image ?? session.user.image,
     aiTone,
+    hasLocalPassword: !!dbUser?.password,
+    authProviders: dbUser?.accounts.map(account => account.provider) ?? []
   };
 
   return (
@@ -36,7 +44,6 @@ export default async function SettingsPage() {
         <p className="text-slate-500 mt-2 text-sm font-bold uppercase tracking-wide opacity-70">Update your account security and application preferences.</p>
       </header>
 
-      {/* გადავცემთ სესიის იუზერს, სადაც ტიპები უკვე დაზუსტებულია */}
       <SettingsClient user={freshUser} />
     </div>
   );

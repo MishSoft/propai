@@ -3,6 +3,8 @@ import bcrypt from "bcrypt";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { isValidPhoneNumber } from "@/lib/phone";
+import { password_validation } from "@/lib/validations/password.schema";
+import { SafeParseSuccess, SafeParseError } from "zod";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -54,9 +56,13 @@ export async function POST(req: Request) {
     );
   }
 
-  if (password.length < 8 || Buffer.byteLength(password, "utf8") > 72) {
+  const safePassword = password_validation.safeParse(password);
+
+  if (!safePassword.success) {
     return NextResponse.json(
-      { message: "Password must be at least 8 characters and no more than 72 bytes" },
+      {
+        message: safePassword.error.issues[0]?.message ?? "Invalid password",
+      },
       { status: 400 },
     );
   }
@@ -69,7 +75,10 @@ export async function POST(req: Request) {
 
     if (existing) {
       return NextResponse.json(
-        { message: "An account with this email already exists. Sign in using your original method." },
+        {
+          message:
+            "An account with this email already exists. Sign in using your original method.",
+        },
         { status: 409 },
       );
     }
@@ -95,7 +104,10 @@ export async function POST(req: Request) {
       error.code === "P2002"
     ) {
       return NextResponse.json(
-        { message: "An account with this email already exists. Sign in using your original method." },
+        {
+          message:
+            "An account with this email already exists. Sign in using your original method.",
+        },
         { status: 409 },
       );
     }
@@ -106,3 +118,5 @@ export async function POST(req: Request) {
     );
   }
 }
+
+

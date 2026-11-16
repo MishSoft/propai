@@ -5,21 +5,19 @@ import { FaUser, FaLock, FaRobot, FaCreditCard, FaGlobe } from 'react-icons/fa'
 import { useTranslations } from 'next-intl'
 import LocaleSwitcher from '../../settings/LocaleSwitcher'
 
-// იმპორტები (დარწმუნდი რომ გზები სწორია)
 import ProfileSection from './ProfileSection'
 import SecuritySection from './SecuritySection'
 import AISettings from './AISettings'
 import BillingSection from './BillingSection'
 
 interface SettingsClientProps {
-  user?: UserSettings; // გავხადოთ optional უსაფრთხოებისთვის
+  user?: UserSettings;
 }
 
 export default function SettingsClient({ user }: SettingsClientProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const t = useTranslations('Settings');
 
-  // თუ იუზერი არ არის, ვაჩვენებთ ლოუდერს, რომ არაფერმა დააეროროს
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-100">
@@ -54,7 +52,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
         ))}
       </aside>
 
-      <main className="flex-1 min-h-[500px]">
+      <main className="flex-1 min-h-125">
         <div className="animate-in fade-in slide-in-from-right-4 duration-500">
           {activeTab === "profile" && <ProfileSection user={user} />}
           {(activeTab as string) === "general" && (
@@ -65,7 +63,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
               <LocaleSwitcher />
             </section>
           )}
-          {activeTab === "security" && <SecuritySection />}
+          {activeTab === "security" && <SecuritySection authProviders={user.authProviders} hasLocalPassword={user.hasLocalPassword} />}
           {activeTab === "ai" && <AISettings initialTone={user.aiTone} />}
           {activeTab === "billing" && <BillingSection plan={user?.plan ?? "free"} />}
         </div>
