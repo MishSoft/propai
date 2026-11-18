@@ -1,25 +1,32 @@
-// app/api/dashboard/stats/route.ts
-
-import { getServerSession } from "next-auth";
-import db from "@/lib/db";
 import { NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
+import db from "@/lib/db";
+import { requireAuth, handleApiError } from "@/lib/auth-helpers";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const user = await requireAuth();
+    logger.info(`Fetching dashboard stats for user ${user.id}`);
 
-  const userId = session.user.id;
+    const listingsCount = await db.post.count({ 
+      where: { authorId: user.id } 
+    });
 
-  // 1. დავითვალოთ პოსტები
-  const listingsCount = await db.post.count({ where: { authorId: userId } });
+    const buyersCount = await db.buyer.count({
+      where: { authorId: user.id }
+    });
 
-  // 2. აქ შეიძლება დაამატო Buyers-ის დათვლა, როცა მაგ თეიბლს შექმნი
-  const buyersCount = 12; // დროებითი სტატიკური ციფრი
+    const unreadNotificationsCount = await db.notification.count({
+      where: { userId: user.id, isRead: false }
+    });
 
-  return NextResponse.json({
-    listingsCount,
-    buyersCount,
-    // აქ დაამატებ სხვა სტატისტიკასაც
-  });
+    return NextResponse.json({
+      listingsCount,
+      buyersCount,
+      unreadNotificationsCount
+    }, { status: 200 });
+
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

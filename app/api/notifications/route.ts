@@ -1,24 +1,17 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth, handleApiError } from "@/lib/auth-helpers";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const user = await requireAuth();
+    logger.info(`Fetching notifications for user ${user.id}`);
 
     const notifications = await db.notification.findMany({
-      where: {
-        userId: (session.user as any).id,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 10, // ბოლო 10 შეტყობინება
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 10,
     });
 
     const buyerIds = [
@@ -32,7 +25,7 @@ export async function GET() {
     ];
     const buyers = buyerIds.length
       ? await db.buyer.findMany({
-          where: { id: { in: buyerIds }, authorId: (session.user as any).id },
+          where: { id: { in: buyerIds }, authorId: user.id },
           select: { id: true, name: true, category: true },
         })
       : [];
@@ -59,9 +52,8 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json(notificationsWithPresentation);
+    return NextResponse.json(notificationsWithPresentation, { status: 200 });
   } catch (error) {
-    console.error("NOTIFICATION_GET_ERROR:", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleApiError(error);
   }
 }

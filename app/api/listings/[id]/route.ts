@@ -1,73 +1,117 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth, handleApiError } from "@/lib/auth-helpers";
+import { logger } from "@/lib/logger";
+import { descriptionSchema } from "@/lib/validations/contact.schema";
 
-// --- PATCH: განცხადების განახლება ---
 export async function PATCH(
   req: Request,
-  { params }: { params: Promise<{ id: string }> } // მიუთითე რომ Promise-ია
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   try {
-    const { id } = await params; // 🔥 აუცილებელია await
-    const { description } = await req.json();
+    const user = await requireAuth();
+    const body = await req.json();
 
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { description } = body;
+
+    const isValidDescription = descriptionSchema.safeParse(description);
+
+    if (!isValidDescription.success) {
+      return NextResponse.json(
+        {
+          message: isValidDescription.error.issues[0]?.message ?? "Invalid description.",
+        },
+        { status: 400 },
+      );
     }
 
-    // @ts-ignore
-    const userId = session.user.id;
-
-    const updatedPost = await db.post.update({
-      where: {
-        id: id,
-        authorId: userId
-      },
-      data: { description: description },
+    const dbUser = await db.user.findUnique({
+      where: { id: user.id },
+      select: { role: true },
     });
 
-    return NextResponse.json(updatedPost, { status: 200 });
-  } catch (error) {
-    return NextResponse.json({ error: "Update failed" }, { status: 500 });
-  }
-}
-
-// --- DELETE: განცხადების წაშლა ---
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> } // აქაც Promise
-) {
-  try {
-    const { id } = await params; // 🔥 აუცილებელია await
-
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    if (!dbUser) {
+      logger.warn(
+        `Authenticated user not found in the database. User ID:${user.id}`,
+      );
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    // @ts-ignore
-    const userId = session.user.id;
-
     const listing = await db.post.findUnique({
-      where: { id: id } // ახლა id უკვე რეალური სტრინგია და არა Promise
+      where: { id: id },
     });
 
     if (!listing) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    if (listing.authorId !== userId) {
+    if (listing.authorId !== user.id && dbUser.role !== "Admin") {
+      throw new Error("Forbidden: You do not own this listing");
+    }
+
+    const updatedPost = await db.post.update({
+      where: {
+        id: id,
+      },
+      data: { description: isValidDescription.data },
+    });
+
+    logger.info(`Post ${id} updated successfully by user ${user.id}`);
+    return NextResponse.json(updatedPost, { status: 200 });
+  } catch (error) {
+    logger.error(`Failed to update post ${id}: ${error}`);
+    return handleApiError(error);
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  try {
+    const user = await requireAuth();
+
+    const dbUser = await db.user.findUnique({
+      where: { id: user.id },
+      select: {
+        role: true,
+      },
+    });
+
+    if (!dbUser) {
+      logger.warn(
+        `Authenticated user couldn't be found in Database. User Id:${user.id}`,
+      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    logger.info(`Attempting to delete post ${id} by user ${user.id}`);
+
+    const listing = await db.post.findUnique({
+      where: { id },
+    });
+
+    if (!listing) {
+      logger.warn(`Post ${id} not found for deletion by user ${user.id}`);
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    if (listing.authorId !== user.id && dbUser.role !== "Admin") {
+      logger.warn(
+        `User ${user.id} attempted to delete post ${id} without authorization. Role: ${dbUser.role}`,
+      );
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await db.post.delete({
-      where: { id: id }
+      where: { id },
     });
 
+    logger.info(`Post ${id} deleted successfully by user ${user.id}`);
     return NextResponse.json({ message: "Deleted" }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
+    logger.error(`Delete failed for post ${id}: ${error}`);
+    return handleApiError(error);
   }
 }
