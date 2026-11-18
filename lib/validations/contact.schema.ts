@@ -14,6 +14,13 @@ const positiveBudget = z
   ])
   .pipe(z.coerce.number().positive().finite());
 
+export const descriptionSchema = z
+  .string()
+  .trim()
+  .max(2000, "Description must not exceed 2,000 characters.")
+
+
+
 export const contactSchema = z.object({
   name: z.string().trim().min(2).max(100),
   phone: z
@@ -29,5 +36,6 @@ export const contactSchema = z.object({
   minBaths: positiveInteger,
   budget: positiveBudget,
   location: z.string().trim().max(150).default(""),
-  description: z.string().trim().max(2000).default(""),
+  description: descriptionSchema.default(""),
 });
+
