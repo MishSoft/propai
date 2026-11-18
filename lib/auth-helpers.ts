@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
+import db from "./db";
 
 export async function getSession() {
   return await getServerSession(authOptions);
@@ -9,9 +10,22 @@ export async function getSession() {
 
 export async function requireAuth() {
   const session = await getSession();
-  if (!session || !session.user) {
+  if (!session || !session.user || !session.user.id) {
     throw new Error("Unauthorized");
   }
+
+  const validUser = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!validUser) {
+    logger.warn("Authenticated user not found in the database.");
+    throw new Error("Unauthorized");
+  }
+
   return session.user;
 }
 
