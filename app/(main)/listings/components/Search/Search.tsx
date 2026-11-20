@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import { IoSearchOutline } from "react-icons/io5";
 import { IoCloseCircleOutline } from "react-icons/io5";
+
 import { useTranslations } from 'next-intl';
 
 export default function Search() {
@@ -11,16 +12,16 @@ export default function Search() {
   return (
     <section className="w-full max-w-md">
       <div className="relative group">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-purple-600 transition-colors duration-200">
-          <IoSearchOutline size={20} />
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-purple-600 transition-colors duration-300 z-10">
+          <IoSearchOutline size={18} />
         </div>
 
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={t('search_placeholder')}
-          className="w-full pl-12 pr-10 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:border-purple-400 focus:ring-4 focus:ring-purple-50 transition-all text-sm font-medium text-slate-600 placeholder:text-slate-400 shadow-sm"
+          placeholder={t('search_placeholder') || 'Search listings...'}
+          className="w-full pl-12 pr-10 py-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 transition-all text-sm font-black text-slate-900 placeholder:text-slate-400 placeholder:font-bold shadow-xl shadow-slate-200/50"
         />
 
         {query && (

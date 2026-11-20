@@ -1,5 +1,5 @@
 "use client"
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Header from './components/Header/Header'
 import Filter from './components/Filter/Filter'
 import {
@@ -154,7 +154,6 @@ export default function Page() {
       </div>
 
 
-      {/* მოდალები */}
       {isModalOpen && <Listing onCreated={handleListingCreated} />}
       {isDetailsOpen && <ListingDetails />}
     </section>
