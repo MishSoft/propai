@@ -11,7 +11,6 @@ export default async function Page() {
   const session = await getServerSession(authOptions);
   const agentId = session?.user?.id || "";
 
-  // პირდაპირ სერვერზე წამოვიღოთ მონაცემები
   const rawRecentListings = agentId ? await db.post.findMany({
     where: { authorId: agentId },
     orderBy: { createdAt: 'desc' },
@@ -25,10 +24,10 @@ export default async function Page() {
   }));
 
   return (
-    <main>
+    <main className="min-h-screen ">
       <Header agentId={agentId} />
       <Hero />
-      <div className='flex w-full flex-col xl:flex-row justify-between gap-2 items-start'>
+      <div className='flex w-full flex-col xl:flex-row justify-between gap-6 items-start mt-8'>
         <Activity data={recentListings} />
         <QuickAction />
       </div>

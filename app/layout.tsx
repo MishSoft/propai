@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css"; // გზა შეიცვალა, რადგან ფაილი ერთი დონით შიგნით შევიდა // გამოიყენე @/ რომ გზა არ აირიოს
+import "./globals.css";
 import { getMessages } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';
 import { cookies } from 'next/headers';
@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Metadata-ს ენის მიხედვით მართვაც შეგვიძლია, მაგრამ ჯერ ასე დავტოვოთ
+
 export const metadata: Metadata = {
   title: "PropAI - Real Estate AI Assistant",
   description: "Manage your properties with AI power",
@@ -30,7 +30,6 @@ export default async function RootLayout({
   }) {
 
 
-  // სერვერიდან ვკითხულობთ შესაბამის JSON ფაილს (en.json, ka.json...)
   const messages = await getMessages();
   const cookieStore = await cookies();
   const locale = cookieStore.get('NEXT_LOCALE')?.value || 'ka';
