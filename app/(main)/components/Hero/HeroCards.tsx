@@ -14,23 +14,23 @@ export default function HeroCards({ title, icon: Icon, number, increment = "0", 
   const isNegative = increment.startsWith("-");
 
   return (
-    <div className='p-5 border border-gray-100 shadow-sm bg-white rounded-2xl flex flex-col gap-4 w-full transition-all hover:shadow-md'>
+    <div className='p-6 glass-card flex flex-col gap-5 w-full transition-all hover:scale-[1.02] cursor-default bg-white/90 shadow-2xl shadow-slate-200/50'>
 
       <div className='flex items-center justify-between'>
-        <h3 className='text-[12px] text-gray-400 font-bold uppercase tracking-wider'>
+        <h3 className='text-[11px] text-slate-400 font-black uppercase tracking-[0.2em]'>
           {title}
         </h3>
-        <div className='p-2 bg-gray-50 rounded-lg text-gray-500'>
-          <Icon size={20} />
+        <div className='p-2.5 bg-slate-50 rounded-xl text-slate-400 border border-slate-100'>
+          <Icon size={22} />
         </div>
       </div>
 
       <div className='flex flex-col gap-1'>
-        <h2 className='text-3xl font-bold text-gray-900 tracking-tight'>
+        <h2 className='text-3xl font-black text-slate-900 tracking-tighter'>
           {priceValue ?? number ?? 0}
         </h2>
 
-        <div className={`flex items-center gap-1.5 text-sm font-medium ${isNegative ? "text-rose-500" : "text-emerald-500"}`}>
+        <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-wider ${isNegative ? "text-rose-600" : "text-emerald-600"}`}>
           <span className={`flex items-center justify-center p-1 rounded-full ${isNegative ? "bg-rose-50" : "bg-emerald-50"}`}>
             {isNegative ? <FaArrowTrendDown size={12} /> : <FaArrowTrendUp size={12} />}
           </span>

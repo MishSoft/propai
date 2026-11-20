@@ -2,24 +2,26 @@ import React from 'react'
 import { BsRobot } from "react-icons/bs";
 import { useTranslations } from 'next-intl';
 
-
 export default function AiBioAgentCard() {
   const t = useTranslations('Dashboard');
-  return (
-    <div className='p-6 flex flex-col w-full xl:w-auto items-start gap-6 border border-gray-100 rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow duration-300 xl:max-w-sm'>
 
-          <div className='w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center'>
-            <BsRobot size={24} className='text-blue-600' />
+  return (
+    <div className='p-8 flex flex-col w-full xl:w-auto items-start gap-8 glass-card transition-all hover:scale-[1.02] cursor-default xl:max-w-sm bg-white/90 shadow-2xl shadow-slate-200/50'>
+
+          <div className='w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-600/30 active:scale-95 transition-all duration-300'>
+            <BsRobot size={32} className='text-white' />
           </div>
 
           <div className='flex flex-col gap-2'>
-            <h2 className='text-xl font-bold text-gray-900'>{t('ai_agent_bio')}</h2>
-            <p className='text-gray-500 text-sm leading-relaxed'>
+            <h2 className='text-2xl font-black text-slate-900 tracking-tighter uppercase'>
+              {t('ai_agent_bio')}
+            </h2>
+            <p className='text-slate-500 text-sm leading-relaxed font-medium'>
               {t('ai_agent_bio_description')}
             </p>
           </div>
 
-          <button className='w-full py-3 px-4 font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors duration-200 shadow-sm active:scale-[0.98]'>
+          <button className='w-full py-4 px-6 font-black text-xs uppercase tracking-widest text-white bg-slate-900 hover:bg-blue-600 rounded-xl transition-all duration-300 shadow-xl shadow-slate-900/10 active:scale-[0.98] cursor-pointer'>
             {t('generate_bio')}
           </button>
 

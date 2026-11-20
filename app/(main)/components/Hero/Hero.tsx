@@ -15,20 +15,22 @@ export default async function Hero() {
   const t = await getTranslations('Dashboard');
   const session = await getServerSession(authOptions);
 
-  if (!session || !session.user) {
+  if (!session?.user || !session.user.id) {
     redirect("/login");
   }
 
+  const userId = session.user.id;
+
   const listingsCount = await db.post.count({
-    where: { authorId: session.user.id }
+    where: { authorId: userId }
   });
 
   const buyersCount = await db.buyer.count({
-    where: { authorId: session.user.id }
+    where: { authorId: userId }
   });
 
   const totalPrice = await db.post.aggregate({
-    where: { authorId: session.user.id },
+    where: { authorId: userId },
     _sum: {
       price: true
     }

@@ -20,15 +20,15 @@ import NotificationBtn from '../../listings/components/Header/NotificationBtn';
 export default function Header({ agentId }: HeaderProps) {
   const t = useTranslations('Dashboard');
   return (
-    <header className="w-full pb-6 mb-6 border-b border-gray-100 flex flex-col gap-6">
+    <header className="w-full pb-8 mb-8 border-b border-slate-100 flex flex-col gap-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
 
         {/* მარცხენა მხარე: ტექსტი */}
-        <div className="flex flex-col gap-1">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
+        <div className="flex flex-col gap-1.5">
+          <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter uppercase">
             {t('welcome')}
           </h2>
-          <p className="text-gray-500 text-sm md:text-base max-w-lg">
+          <p className="text-slate-500 text-sm md:text-base max-w-lg font-medium">
             {t('tagline')}
           </p>
         </div>
@@ -41,7 +41,7 @@ export default function Header({ agentId }: HeaderProps) {
             </div>
           </div>
           <ShareLink agentId={agentId} />
-          <div className="h-10 w-px bg-gray-200 hidden sm:block"></div> {/* გამყოფი ხაზი */}
+          <div className="h-10 w-px bg-slate-200 hidden sm:block"></div> {/* გამყოფი ხაზი */}
           <ExportData />
         </div>
 
