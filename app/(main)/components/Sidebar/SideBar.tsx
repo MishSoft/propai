@@ -9,6 +9,8 @@ import { useUiStore } from "@/store/useUiStore";
 import Logo from "./Logo";
 import SideLinks from "./SideLinks";
 import SignOutBtn from "./SignOutBtn";
+import { GoSidebarCollapse } from "react-icons/go";
+
 
 const DESKTOP_QUERY = "(min-width: 1280px)";
 const MENU_BUTTON_ID = "propai-menu-toggle-btn";
@@ -18,6 +20,8 @@ const FOCUSABLE_SELECTOR =
 export default function SideBar() {
   const isSidebarOpen = useUiStore((state) => state.isSidebarOpen);
   const closeSidebar = useUiStore((state) => state.closeSidebar);
+  const toggleSidebarCollapsed = useUiStore((state) => state.toggleSidebarCollapsed);
+  const isSidebarCollapsed = useUiStore((state) => state.isSidebarCollapsed);
   const pathname = usePathname();
   const t = useTranslations("Navigation");
   const sidebarRef = useRef<HTMLElement | null>(null);
@@ -30,8 +34,8 @@ export default function SideBar() {
     role: "dialog" | "navigation";
     "aria-modal"?: "true";
   } = isDesktop
-    ? { role: "navigation" }
-    : { role: "dialog", "aria-modal": isSidebarOpen ? "true" : undefined };
+      ? { role: "navigation" }
+      : { role: "dialog", "aria-modal": isSidebarOpen ? "true" : undefined };
 
   // Desktop is a persistent navigation landmark; leaving mobile mode closes the drawer, which releases scroll lock
   useEffect(() => {
@@ -111,17 +115,21 @@ export default function SideBar() {
     };
   }, [isSidebarOpen, isDesktop, dismiss]);
 
+  const handleSidebarOpen = () => {
+    if (!isDesktop) return
+    toggleSidebarCollapsed();
+  }
+
   return (
     <>
       {/* Dimmed backdrop overlay behind drawer on mobile/tablet */}
       <div
         onClick={dismiss}
         aria-hidden="true"
-        className={`fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 transition-opacity duration-300 xl:hidden ${
-          isSidebarOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 transition-opacity duration-300 xl:hidden ${isSidebarOpen
+          ? "opacity-100  pointer-events-auto"
+          : "opacity-0 pointer-events-none"
+          }`}
       />
 
       {/* Sidebar container: modal dialog on mobile/tablet, plain navigation landmark on desktop */}
@@ -130,32 +138,44 @@ export default function SideBar() {
         ref={sidebarRef}
         id="propai-sidebar-nav"
         aria-label={t("mainNavigation")}
-        className={`fixed left-0 top-0 h-full w-64 bg-white border-r border-slate-100 flex flex-col items-center py-8 z-50 transition-[transform,visibility] duration-300 motion-reduce:transition-none xl:translate-x-0 ${
-          isSidebarOpen
+        className={`fixed left-0 top-0   h-full w-64 bg-white border-r border-slate-100 flex flex-col items-center z-50 transition-[width,transform,visibility] duration-300 motion-reduce:transition-none xl:translate-x-0
+          ${isSidebarCollapsed && isDesktop ? "xl:w-20" : "xl:w-64"}
+          ${isSidebarOpen
             ? "translate-x-0 shadow-2xl"
             : "-translate-x-full max-xl:invisible"
-        }`}
+          }`}
       >
-        <div className="w-full px-6 mb-8 flex items-center justify-between">
-          <Logo />
-          {/* Close button for mobile/tablet */}
-          <button
-            ref={closeButtonRef}
-            type="button"
-            onClick={dismiss}
-            aria-label={t("closeMenu")}
-            className="xl:hidden p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 cursor-pointer"
-          >
-            <RiCloseLine size={24} aria-hidden="true" />
-          </button>
+        <div className="flex flex-col w-full">
+          {
+            isDesktop && (
+              <div className={`border-b py-3 flex items-center ${isSidebarCollapsed && isDesktop ? "justify-center" : "justify-end mr-5"} border-gray-100`}>
+                <button onClick={handleSidebarOpen} className="cursor-pointer">
+                  <GoSidebarCollapse size={18} />
+                </button>
+              </div>
+            )
+          }
+          <div className={`w-full mb-8 ${isSidebarCollapsed && isDesktop ? "justify-center" : "px-3 justify-between"} mt-5 flex items-center`}>
+            <Logo />
+            {/* Close button for mobile/tablet */}
+            <button
+              ref={closeButtonRef}
+              type="button"
+              onClick={dismiss}
+              aria-label={t("closeMenu")}
+              className="xl:hidden p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 cursor-pointer"
+            >
+              <RiCloseLine size={24} aria-hidden="true" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex-1 w-full px-4 overflow-y-auto custom-scrollbar">
-          <SideLinks onNavigate={closeSidebar} />
+        <div className="flex-1 w-full px-4   custom-scrollbar">
+          <SideLinks onNavigate={closeSidebar} isDesktop={isDesktop} />
         </div>
 
-        <div className="w-full px-4 mt-auto pt-6 border-t border-slate-100">
-          <SignOutBtn />
+        <div className="w-full px-4 mt-auto py-3 border-t border-slate-100">
+          <SignOutBtn isDesktop={isDesktop} />
         </div>
       </aside>
     </>

@@ -5,11 +5,18 @@ import { signOut } from 'next-auth/react';
 import { RiLogoutBoxLine } from "react-icons/ri";
 import { CgSpinner } from 'react-icons/cg';
 import { useTranslations } from 'next-intl';
+import { useUiStore } from '@/store/useUiStore';
 
-export default function SignOutBtn() {
+
+type SignOutBtnType = {
+  isDesktop: boolean
+}
+
+
+export default function SignOutBtn({ isDesktop }: SignOutBtnType) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const t = useTranslations('Common');
-
+  const isSidebarCollapsed = useUiStore((state) => state.isSidebarCollapsed)
   const handleSignOut = async () => {
     setIsLoggingOut(true);
     try {
@@ -25,18 +32,22 @@ export default function SignOutBtn() {
       type="button"
       onClick={handleSignOut}
       disabled={isLoggingOut}
-      className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-slate-500 font-bold hover:bg-red-50 hover:text-red-600 transition-all duration-200 group cursor-pointer active:scale-95 disabled:opacity-50"
+      className={`w-full flex items-center ${isSidebarCollapsed ? "justify-center" : "justify-start"} gap-4 px-5 py-4 rounded-2xl text-slate-500 font-bold hover:bg-red-50 hover:text-red-600 transition-all duration-200 group cursor-pointer active:scale-95 disabled:opacity-50`}
     >
       <div className="transition-transform duration-200 group-hover:scale-110">
         {isLoggingOut ? (
           <CgSpinner className='animate-spin size-6' />
         ) : (
-          <RiLogoutBoxLine size={24} />
+          <RiLogoutBoxLine size={18} />
         )}
       </div>
-      <span className="text-sm tracking-tight capitalize">
-        {t('logout')}
-      </span>
+      {
+        !(isSidebarCollapsed && isDesktop) && (
+          <span className="text-xs tracking-tight capitalize">
+            {t('logout')}
+          </span>
+        )
+      }
     </button>
   );
 }
