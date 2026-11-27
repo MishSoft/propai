@@ -1,4 +1,4 @@
-import { create } from "zustand"
+import { create } from "zustand";
 
 export interface ListingType {
   id: string;
@@ -13,7 +13,6 @@ export interface ListingType {
   createdAt?: string;
   category: string;
 
-  // დაამატე ეს ორი ველი აუცილებლად:
   authorId: string;
   author: {
     fullName: string;
@@ -24,7 +23,6 @@ export interface ListingType {
 }
 
 interface useUiStoreProps {
-  // listings მასივი აუცილებელია, რომ AgentPortfolio-მ შეძლოს მონაცემების წაკითხვა
   listings: ListingType[];
 
   isListingModalOpen: boolean;
@@ -41,10 +39,12 @@ interface useUiStoreProps {
   openSidebar: () => void;
   closeSidebar: () => void;
   toggleSidebar: () => void;
+
+  isSidebarCollapsed: boolean;
+  toggleSidebarCollapsed: () => void;
 }
 
 export const useUiStore = create<useUiStoreProps>((set) => ({
-  // სატესტო მონაცემები (აქ რეალურ პროექტში თავიდან ცარიელი [] იქნება)
   listings: [
     {
       id: "1",
@@ -62,32 +62,41 @@ export const useUiStore = create<useUiStoreProps>((set) => ({
         fullName: "Agent Name",
         phone: "+995 123 456 789",
         image: "/agent.jpg",
-        role: "agent"
-      }
-    }
+        role: "agent",
+      },
+    },
   ],
 
   // Listing Modal
   isListingModalOpen: false,
   openListingModal: () => set({ isListingModalOpen: true }),
   closeListingModal: () => set({ isListingModalOpen: false }),
-  toggleListingModal: () => set((state) => ({ isListingModalOpen: !state.isListingModalOpen })),
+  toggleListingModal: () =>
+    set((state) => ({ isListingModalOpen: !state.isListingModalOpen })),
 
   // Details Modal
   isDetailsModalOpen: false,
   selectedListing: null,
-  openDetailsModal: (listing: ListingType) => set({
-    selectedListing: listing,
-    isDetailsModalOpen: true
-  }),
-  closeDetailsModal: () => set({
-    selectedListing: null,
-    isDetailsModalOpen: false
-  }),
+  openDetailsModal: (listing: ListingType) =>
+    set({
+      selectedListing: listing,
+      isDetailsModalOpen: true,
+    }),
+  closeDetailsModal: () =>
+    set({
+      selectedListing: null,
+      isDetailsModalOpen: false,
+    }),
 
   // Responsive Sidebar Drawer
   isSidebarOpen: false,
   openSidebar: () => set({ isSidebarOpen: true }),
   closeSidebar: () => set({ isSidebarOpen: false }),
-  toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
-}))
+  toggleSidebar: () =>
+    set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+
+  // Desktop sidebar collapse
+  isSidebarCollapsed: true,
+  toggleSidebarCollapsed: () =>
+    set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
+}));
