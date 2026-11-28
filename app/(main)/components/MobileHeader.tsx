@@ -12,7 +12,7 @@ export default function MobileHeader() {
 
   return (
     <header className="xl:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-white/80 backdrop-blur-md border-b border-slate-100">
-      <Logo />
+      <Logo isDesktop={false} />
       <button
         id="propai-menu-toggle-btn"
         type="button"
