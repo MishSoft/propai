@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export interface ListingType {
   id: string;
@@ -42,61 +43,83 @@ interface useUiStoreProps {
 
   isSidebarCollapsed: boolean;
   toggleSidebarCollapsed: () => void;
+
+  _hasHydrated: boolean;
+  setHasHydrated: (value: boolean) => void;
 }
 
-export const useUiStore = create<useUiStoreProps>((set) => ({
-  listings: [
+export const useUiStore = create<useUiStoreProps>()(
+  persist(
+    (set) => ({
+      listings: [
+        {
+          id: "1",
+          price: 150000,
+          street: "ჭავჭავაძის 37",
+          city: "თბილისი",
+          beds: 2,
+          baths: 1,
+          sqft: 85,
+          images: ["/house1.jpg"],
+          description: "ლამაზი ბინა ვაკეში...",
+          category: "Sale",
+          authorId: "agent_123",
+          author: {
+            fullName: "Agent Name",
+            phone: "+995 123 456 789",
+            image: "/agent.jpg",
+            role: "agent",
+          },
+        },
+      ],
+
+      // Listing Modal
+      isListingModalOpen: false,
+      openListingModal: () => set({ isListingModalOpen: true }),
+      closeListingModal: () => set({ isListingModalOpen: false }),
+      toggleListingModal: () =>
+        set((state) => ({ isListingModalOpen: !state.isListingModalOpen })),
+
+      // Details Modal
+      isDetailsModalOpen: false,
+      selectedListing: null,
+      openDetailsModal: (listing: ListingType) =>
+        set({
+          selectedListing: listing,
+          isDetailsModalOpen: true,
+        }),
+      closeDetailsModal: () =>
+        set({
+          selectedListing: null,
+          isDetailsModalOpen: false,
+        }),
+
+      // Responsive Sidebar Drawer
+      isSidebarOpen: false,
+      openSidebar: () => set({ isSidebarOpen: true }),
+      closeSidebar: () => set({ isSidebarOpen: false }),
+      toggleSidebar: () =>
+        set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+
+      // Desktop sidebar collapse
+      isSidebarCollapsed: false,
+      toggleSidebarCollapsed: () =>
+        set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
+
+      _hasHydrated: false,
+      setHasHydrated: (value: boolean) => set({ _hasHydrated: value }),
+    }),
     {
-      id: "1",
-      price: 150000,
-      street: "ჭავჭავაძის 37",
-      city: "თბილისი",
-      beds: 2,
-      baths: 1,
-      sqft: 85,
-      images: ["/house1.jpg"],
-      description: "ლამაზი ბინა ვაკეში...",
-      category: "Sale",
-      authorId: "agent_123",
-      author: {
-        fullName: "Agent Name",
-        phone: "+995 123 456 789",
-        image: "/agent.jpg",
-        role: "agent",
+      name: "propai-ui-store",
+      partialize: (state) => ({
+        isSidebarCollapsed: state.isSidebarCollapsed,
+      }),
+      onRehydrateStorage: (state) => (rehydratedState, error) => {
+        if (error) {
+          console.error("Failed to rehydrate UI store:", error);
+        }
+        (rehydratedState ?? state)?.setHasHydrated(true);
       },
     },
-  ],
-
-  // Listing Modal
-  isListingModalOpen: false,
-  openListingModal: () => set({ isListingModalOpen: true }),
-  closeListingModal: () => set({ isListingModalOpen: false }),
-  toggleListingModal: () =>
-    set((state) => ({ isListingModalOpen: !state.isListingModalOpen })),
-
-  // Details Modal
-  isDetailsModalOpen: false,
-  selectedListing: null,
-  openDetailsModal: (listing: ListingType) =>
-    set({
-      selectedListing: listing,
-      isDetailsModalOpen: true,
-    }),
-  closeDetailsModal: () =>
-    set({
-      selectedListing: null,
-      isDetailsModalOpen: false,
-    }),
-
-  // Responsive Sidebar Drawer
-  isSidebarOpen: false,
-  openSidebar: () => set({ isSidebarOpen: true }),
-  closeSidebar: () => set({ isSidebarOpen: false }),
-  toggleSidebar: () =>
-    set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
-
-  // Desktop sidebar collapse
-  isSidebarCollapsed: true,
-  toggleSidebarCollapsed: () =>
-    set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
-}));
+  ),
+);
